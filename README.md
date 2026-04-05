@@ -12,7 +12,7 @@ PLY, XYZ, MATLAB `.m`, and NumPy formats.
 
 ## Algorithms
 
-### 1 · Algebraic Least-Squares Fitting (Li & Griffiths, GMAP 2004)
+### 1 · Algebraic Least-Squares Fitting — pure algebraic variant (`fit_ellipsoid`)
 
 > Li, Q. and Griffiths, J. G. (2004).  
 > *Least squares ellipsoid specific fitting.*  
@@ -23,7 +23,23 @@ Fits a general algebraic ellipsoid `F(x,y,z) = 0` to 3-D point data using a
 constrained least-squares approach.  The constraint matrix (with parameter
 `k = 4`) guarantees that only ellipsoidal solutions are admitted.
 
-### 2 · RBF with Ellipsoid Constraint (Li & Griffiths, CGF 2004)
+**This is the pure algebraic variant**: it does **not** estimate surface
+normals, does **not** generate off-surface point layers, and does **not**
+compute RBF weights.  Only the 10 polynomial coefficients and derived
+geometric parameters (centre, radii, axes) are returned.
+
+### 2 · Algebraic + RBF variant, no normal estimation (`fit_ellipsoid_no_normals`)
+
+Extends the algebraic fit above by also recovering a set of radial basis
+function (RBF) weights, using **only the original on-surface points** as the
+training set (target values d = 0).
+
+**This is an implementation choice** and is a distinct variant from approaches
+that augment the training set with off-surface points (e.g. by estimating
+surface normals and generating offset layers).  No normal vectors are
+estimated and no additional point layers are created.
+
+### 3 · RBF with Ellipsoid Constraint (Li & Griffiths, CGF 2004)
 
 > Li, Q. and Griffiths, J. G. (2004).  
 > *Radial basis functions for surface reconstruction from unorganised point
@@ -95,7 +111,7 @@ Optional (for isosurface visualisation): `scikit-image`.
 
 ## Quick start
 
-### Algebraic fitting
+### Algebraic fitting (pure algebraic, no RBF weights)
 
 ```python
 import numpy as np
@@ -108,6 +124,26 @@ result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
 print("Centre:", result["centre"])   # → [1.0, 2.0, 3.0]
 print("Radii :", result["radii"])    # → [5.0, 3.0, 2.0]  (sorted descending)
 ```
+
+### Algebraic + RBF fitting (no normal estimation, no off-surface layers)
+
+```python
+import numpy as np
+from ellipsoid_fitting import fit_ellipsoid_no_normals, generate_ellipsoid_points
+
+pts = generate_ellipsoid_points(centre=(1, 2, 3), radii=(5, 3, 2),
+                                 n_points=300, noise_std=0.05)
+result = fit_ellipsoid_no_normals(pts[:, 0], pts[:, 1], pts[:, 2])
+
+print("Centre     :", result["centre"])       # → [1.0, 2.0, 3.0]
+print("Radii      :", result["radii"])        # → [5.0, 3.0, 2.0]
+print("RBF weights:", result["rbf_weights"].shape)  # → (300,)
+```
+
+This variant does **not** estimate surface normals and does **not** generate
+off-surface point layers.  It uses only the on-surface input points
+(target d = 0) and additionally returns RBF weights alongside the
+polynomial coefficients.
 
 ### RBF fitting
 
@@ -213,9 +249,12 @@ directly.
 
 ### Algebraic fitting
 
-#### `fit_ellipsoid(x, y, z, k=4.0) → dict`
+#### `fit_ellipsoid(x, y, z, k=4.0) → dict` — pure algebraic variant
 
-Fit an ellipsoid to 3-D point data (Li & Griffiths, GMAP 2004).
+Fit an ellipsoid to 3-D point data using the constrained algebraic
+least-squares method (Li & Griffiths, GMAP 2004).  **Does not** estimate
+surface normals, **does not** generate off-surface layers, and **does not**
+compute RBF weights.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
@@ -231,6 +270,29 @@ Fit an ellipsoid to 3-D point data (Li & Griffiths, GMAP 2004).
 | `axes` | `(3, 3)` | Unit-vector columns (axes of the ellipsoid) |
 | `M` | `(4, 4)` | Homogeneous quadric matrix |
 | `coefficients` | `(10,)` | Raw algebraic coefficients `[A,B,C,D,E,F,G,H,I,J]` |
+
+#### `fit_ellipsoid_no_normals(x, y, z, k=4.0) → dict` — algebraic + RBF variant (no normal estimation)
+
+Extends `fit_ellipsoid` by also recovering RBF weights.  Uses only the
+original on-surface points as the training set (target d = 0) — an
+implementation choice that avoids normal estimation and off-surface point
+layers.
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `x`, `y`, `z` | array-like (N,) | Cartesian coordinates |
+| `k` | float | Constraint parameter; must be in `(0, 4]`; default `4.0` |
+
+**Returns** a `dict` with the same keys as `fit_ellipsoid`, plus:
+
+| Key | Shape | Description |
+|-----|-------|-------------|
+| `centre` | `(3,)` | Ellipsoid centre |
+| `radii` | `(3,)` | Semi-axis lengths (descending) |
+| `axes` | `(3, 3)` | Unit-vector columns (axes of the ellipsoid) |
+| `M` | `(4, 4)` | Homogeneous quadric matrix |
+| `coefficients` | `(10,)` | Raw algebraic coefficients `[A,B,C,D,E,F,G,H,I,J]` |
+| `rbf_weights` | `(N,)` | RBF weight vector (one per input point) |
 
 #### `algebraic_distance(x, y, z, coefficients) → ndarray (N,)`
 
