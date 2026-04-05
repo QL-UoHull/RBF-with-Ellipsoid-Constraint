@@ -31,6 +31,9 @@ dev = [
     "jupyter",
     "nbformat",
 ]
+vis = [
+    "scikit-image>=0.19",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

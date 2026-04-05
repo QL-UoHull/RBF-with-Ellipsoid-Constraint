@@ -26,6 +26,7 @@ htmlcov/
 
 # Generated figures (examples write these at runtime)
 examples/basic_example_plot.png
+examples/fit_*.png
 notebooks/noise_study.png
 notebooks/ellipsoid_fit_vis.png
 
