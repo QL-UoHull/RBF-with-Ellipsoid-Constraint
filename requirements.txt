@@ -1,3 +1,5 @@
 numpy>=1.22
 scipy>=1.8
 matplotlib>=3.5
+# Optional: install scikit-image for isosurface (marching cubes) visualisation
+# scikit-image>=0.19
