@@ -1,4 +1,4 @@
-# RBR with Ellipsoid Constraint — Implicit Fitting Using Radial Basis Functions
+# RBF with Ellipsoid Constraint — Implicit Fitting Using Radial Basis Functions
 
 [![Tests](https://img.shields.io/badge/tests-25%20passed-brightgreen)](#running-tests)
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
