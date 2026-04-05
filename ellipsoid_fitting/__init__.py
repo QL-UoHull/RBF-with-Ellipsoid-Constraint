@@ -1,10 +1,16 @@
 """
 Ellipsoid Fitting – two complementary algorithms:
 
-1. **Li–Griffiths (2004)** algebraic least-squares fitting
-   (``fit_ellipsoid``).
+1. **Li–Griffiths (2004) pure algebraic fitting** — fits ellipsoid polynomial
+   coefficients only, no normal estimation, no off-surface layers, no RBF
+   weights (``fit_ellipsoid``).
 
-2. **RBF with Ellipsoid Constraint (Li & Griffiths, CGF 2004)** – implicit
+2. **Algebraic + RBF variant, no normal estimation** — same algebraic fit as
+   above, extended to also recover RBF weights using only the on-surface
+   training points (no normal estimation, no off-surface layers)
+   (``fit_ellipsoid_no_normals``).
+
+3. **RBF with Ellipsoid Constraint (Li & Griffiths, CGF 2004)** – implicit
    surface reconstruction using a linear radial basis function kernel
    (``fit_rbf_ellipsoid_linear`` / ``evaluate_model_linear``).
 
@@ -29,6 +35,7 @@ Li, Q. and Griffiths, J. G. (2004).
 
 from .ellipsoid_fit import (
     fit_ellipsoid,
+    fit_ellipsoid_no_normals,
     algebraic_distance,
     residuals_rms,
 )
@@ -50,8 +57,10 @@ from .rbf_ellipsoid import (
 )
 
 __all__ = [
-    # Algebraic ellipsoid fitting (Li & Griffiths, GMAP 2004)
+    # Algebraic ellipsoid fitting (Li & Griffiths, GMAP 2004) – pure algebraic
     "fit_ellipsoid",
+    # Algebraic + RBF variant without normal estimation or off-surface layers
+    "fit_ellipsoid_no_normals",
     "algebraic_distance",
     "residuals_rms",
     # Synthetic data generator

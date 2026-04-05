@@ -1,15 +1,25 @@
 """
 Ellipsoid fitting via least squares with ellipsoid-specific constraints.
 
-Python implementation of the algorithm described in:
+This module provides two public fitting functions:
 
-    Li, Q. and Griffiths, J. G. (2004).
-    "Least squares ellipsoid specific fitting."
-    Proceedings of the Geometric Modeling and Processing, 2004.
-    IEEE, pp. 335-340.
-    https://doi.org/10.1109/GMAP.2004.1290055
+1. ``fit_ellipsoid`` — **pure algebraic variant** (Li & Griffiths, GMAP 2004).
+   This is a direct implementation of the constrained least-squares algebraic
+   fitting described in the paper.  It does **not** estimate surface normals,
+   does **not** generate off-surface point layers, and does **not** compute
+   radial basis function (RBF) weights.  The output is a set of geometric
+   parameters (centre, radii, axes) derived from the 10 algebraic polynomial
+   coefficients.
 
-The algorithm fits a general algebraic ellipsoid of the form
+2. ``fit_ellipsoid_no_normals`` — **algebraic + RBF variant (no normal
+   estimation, no off-surface layers)**.  This extends the algebraic fit by
+   also recovering a set of RBF weights, using only the original on-surface
+   points as the training set (target values d = 0).  No normal vectors are
+   estimated and no additional offset point layers are generated; this is an
+   implementation choice distinct from variants that augment the training set
+   with off-surface points.
+
+Both variants fit a general algebraic ellipsoid of the form
 
     F(x, y, z) = Ax² + By² + Cz² + 2Dyz + 2Exz + 2Fxy
                  + 2Gx + 2Hy + 2Iz + J = 0
@@ -18,12 +28,21 @@ to a set of 3-D data points using a constrained least-squares approach.
 The constraint matrix (with parameter k = 4) guarantees that only
 ellipsoidal solutions are admitted, distinguishing the method from
 unconstrained quadric fitting.
+
+Reference
+---------
+Li, Q. and Griffiths, J. G. (2004).
+    "Least squares ellipsoid specific fitting."
+    Proceedings of the Geometric Modeling and Processing, 2004.
+    IEEE, pp. 335-340.
+    https://doi.org/10.1109/GMAP.2004.1290055
 """
 
 from __future__ import annotations
 
 import numpy as np
 from numpy.linalg import eig, inv
+from scipy.spatial.distance import cdist
 
 
 # ---------------------------------------------------------------------------
@@ -169,6 +188,26 @@ def _algebraic_to_geometric(v: np.ndarray) -> dict:
     }
 
 
+def _rbf_matrix(pts_a: np.ndarray, pts_b: np.ndarray) -> np.ndarray:
+    """Compute the linear RBF kernel matrix between two point sets.
+
+    The linear kernel is φ(r) = r (Euclidean distance).
+
+    Parameters
+    ----------
+    pts_a : ndarray, shape (M, 3)
+        Query points.
+    pts_b : ndarray, shape (N, 3)
+        Centre points.
+
+    Returns
+    -------
+    Phi : ndarray, shape (M, N)
+        Phi[i, j] = ||pts_a[i] - pts_b[j]||
+    """
+    return cdist(pts_a, pts_b)
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -179,7 +218,14 @@ def fit_ellipsoid(
     z: np.ndarray,
     k: float = 4.0,
 ) -> dict:
-    """Fit an ellipsoid to 3-D point data (Li & Griffiths, 2004).
+    """Fit an ellipsoid to 3-D point data — **pure algebraic variant**.
+
+    This is a direct implementation of the constrained least-squares algebraic
+    fitting described in Li & Griffiths (2004, GMAP).  It is the **pure
+    algebraic variant**: it does **not** estimate surface normals, does **not**
+    generate off-surface point layers, and does **not** compute radial basis
+    function (RBF) weights.  If you also need RBF weights (with the same
+    on-surface-only training set), use :func:`fit_ellipsoid_no_normals`.
 
     The method minimises the sum of squared algebraic distances subject to
     the constraint that the fitted quadric is an ellipsoid.  It solves the
@@ -294,6 +340,142 @@ def fit_ellipsoid(
     v /= np.linalg.norm(v)
 
     return _algebraic_to_geometric(v)
+
+
+def fit_ellipsoid_no_normals(
+    x: np.ndarray,
+    y: np.ndarray,
+    z: np.ndarray,
+    k: float = 4.0,
+) -> dict:
+    """Fit an ellipsoid to 3-D point data — **algebraic + RBF variant, no normal estimation**.
+
+    This function extends :func:`fit_ellipsoid` by also computing a set of
+    radial basis function (RBF) weights in addition to the algebraic polynomial
+    coefficients.  It is an implementation choice to use **only the original
+    on-surface points** as the training set (target values d = 0), without
+    estimating surface normals and without generating off-surface point layers
+    (no ``pts_plus`` / ``pts_minus`` construction).
+
+    This is the **on-surface-only, no-normal-estimation** variant:
+
+    * Training set: T = P (the N input points only).
+    * Target vector: d = 0 (on-surface constraint only).
+    * Scatter matrix: S = Dᵀ D computed from the N-row design matrix.
+    * The same constrained eigenvalue problem as :func:`fit_ellipsoid` is
+      solved to obtain polynomial coefficients **β**.
+    * RBF weights **w** are then recovered by solving the linear system
+      Φ w ≈ −D β, where Φ is the N × N linear RBF kernel matrix (φ(r) = r)
+      evaluated between all pairs of input points.
+
+    Parameters
+    ----------
+    x, y, z : array-like of shape (N,)
+        Cartesian coordinates of the 3-D data points.  At least 10 points
+        are required.
+    k : float, optional
+        Constraint parameter (default 4).  Li & Griffiths (2004) prove that
+        any *k* in the open interval (0, 4] yields ellipsoid-specific
+        constraints; k = 4 is the recommended value.
+
+    Returns
+    -------
+    result : dict
+        A dictionary containing:
+
+        ``centre``      : ndarray (3,)
+            Coordinates of the ellipsoid centre.
+        ``radii``       : ndarray (3,)
+            Semi-axis lengths, sorted in descending order.
+        ``axes``        : ndarray (3, 3)
+            Unit vectors of the semi-axes (columns), in the same order as
+            *radii*.
+        ``M``           : ndarray (4, 4)
+            Homogeneous 4 × 4 matrix representation of the quadric.
+        ``coefficients``: ndarray (10,)
+            Raw algebraic coefficients [A, B, C, D, E, F, G, H, I, J].
+        ``rbf_weights`` : ndarray (N,)
+            RBF weight vector **w** (one weight per input point), recovered
+            by solving Φ w ≈ −D β with a linear RBF kernel φ(r) = r.
+
+    Raises
+    ------
+    ValueError
+        If fewer than 10 data points are supplied, if the arrays have
+        mismatched lengths, or if the fitted surface is not a valid ellipsoid.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from ellipsoid_fitting import fit_ellipsoid_no_normals, generate_ellipsoid_points
+    >>> pts = generate_ellipsoid_points(centre=(1, 2, 3), radii=(5, 3, 2),
+    ...                                  n_points=200, noise_std=0.05)
+    >>> result = fit_ellipsoid_no_normals(pts[:, 0], pts[:, 1], pts[:, 2])
+    >>> print("Centre     :", result["centre"])
+    >>> print("Radii      :", result["radii"])
+    >>> print("RBF weights:", result["rbf_weights"].shape)
+    """
+    x = np.asarray(x, dtype=float).ravel()
+    y = np.asarray(y, dtype=float).ravel()
+    z = np.asarray(z, dtype=float).ravel()
+
+    n = len(x)
+    if n != len(y) or n != len(z):
+        raise ValueError("x, y and z must have the same length.")
+    if n < 10:
+        raise ValueError(
+            f"At least 10 data points are required; got {n}."
+        )
+
+    pts = np.column_stack([x, y, z])   # (N, 3)
+
+    D = _design_matrix(x, y, z)
+    S = D.T @ D                   # 10 × 10 scatter matrix
+    C = _constraint_matrix(k)     # 10 × 10 constraint matrix
+
+    # Solve the same constrained eigenvalue problem as fit_ellipsoid.
+    S11 = S[:6, :6]
+    S12 = S[:6, 6:]
+    S21 = S[6:, :6]
+    S22 = S[6:, 6:]
+    C11 = C[:6, :6]
+
+    try:
+        S22_inv = inv(S22)
+    except np.linalg.LinAlgError as exc:
+        raise ValueError(
+            "The scatter matrix S22 is singular. "
+            "Consider adding more (or more diverse) data points."
+        ) from exc
+
+    M = inv(C11) @ (S11 - S12 @ S22_inv @ S21)
+    eigenvalues, eigenvectors = eig(M)
+    eigenvalues = eigenvalues.real
+    eigenvectors = eigenvectors.real
+
+    _tol = 1e-6 * np.max(np.abs(eigenvalues))
+    positive_mask = eigenvalues > -_tol
+    if not np.any(positive_mask):
+        raise ValueError(
+            "No positive eigenvalue found.  The data may not lie on an "
+            "ellipsoid, or may be too noisy / degenerate."
+        )
+    best_idx = np.argmax(eigenvalues)
+    u1 = eigenvectors[:, best_idx]
+
+    u2 = -S22_inv @ S21 @ u1
+    v = np.concatenate([u1, u2])
+    v /= np.linalg.norm(v)
+
+    # Recover RBF weights w by solving: Phi * w ≈ d - D * v
+    # Training target d = 0 (on-surface only), so: Phi * w ≈ -D * v
+    Phi = _rbf_matrix(pts, pts)               # (N, N) linear RBF matrix
+    rhs = -(D @ v)                            # (N,) right-hand side
+    rbf_weights, _, _, _ = np.linalg.lstsq(Phi, rhs, rcond=None)
+
+    result = _algebraic_to_geometric(v)
+    result["rbf_weights"] = rbf_weights
+    return result
 
 
 def algebraic_distance(
