@@ -15,13 +15,14 @@ license: MIT
 version: 2.0.0
 date-released: '2024-01-01'
 keywords:
+  - implicit surface fitting
+  - radial basis functions
   - ellipsoid fitting
   - radial basis functions
   - RBF
   - surface reconstruction
   - least squares
   - 3D geometry
-  - constrained optimisation
   - point cloud
   - bone reconstruction
 references:
@@ -49,14 +50,13 @@ references:
     authors:
       - family-names: Li
         given-names: Qingde
-      - family-names: Griffiths
-        given-names: John G.
-    collection-title: >-
-      Proceedings of the Geometric Modeling and Processing, 2004
-    publisher:
-      name: IEEE
-    pages: 335-340
+    journal: Computer Graphics Forum
+    volume: 23
+    issue: 1
+    pages: 89-96
     year: 2004
-    doi: 10.1109/GMAP.2004.1290055
+    publisher:
+      name: Wiley/Blackwell
+    doi: 10.1111/j.1467-8659.2004.00756.x
     url: >-
-      https://www.researchgate.net/publication/4070857_Least_squares_ellipsoid_specific_fitting
+      https://doi.org/10.1111/j.1467-8659.2004.00756.x

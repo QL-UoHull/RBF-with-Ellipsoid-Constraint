@@ -1,30 +1,19 @@
 """
-Ellipsoid Fitting – two complementary algorithms:
+RBR with Ellipsoid Constraint — Implicit Fitting Using Radial Basis Functions
 
 1. **Li–Griffiths (2004)** algebraic least-squares fitting
    (``fit_ellipsoid``).
 
-2. **RBF with Ellipsoid Constraint (Li & Griffiths, CGF 2004)** – implicit
-   surface reconstruction using a linear radial basis function kernel
-   (``fit_rbf_ellipsoid_linear`` / ``evaluate_model_linear``).
+    Li, Q. (2004).
+    "Implicit fitting using radial basis functions with ellipsoidal
+    constraint."
+    Computer Graphics Forum, 23(1), 89–96. Wiley/Blackwell.
+    https://doi.org/10.1111/j.1467-8659.2004.00756.x
 
-A unified multi-format **data loader** (``load_point_cloud``) supports CSV,
-OBJ, PLY (ASCII and binary), XYZ/TXT/PTS, MATLAB `.m` scripts, and NumPy
-NPY/NPZ archives.
-
-References
-----------
-Li, Q. and Griffiths, J. G. (2004).
-    *Least squares ellipsoid specific fitting.*
-    Proceedings of the Geometric Modeling and Processing, 2004.
-    IEEE, pp. 335–340.
-    https://doi.org/10.1109/GMAP.2004.1290055
-
-Li, Q. and Griffiths, J. G. (2004).
-    *Radial basis functions for surface reconstruction from unorganised
-    point clouds with applications to bone reconstruction.*
-    Computer Graphics Forum, 23(1), 67–78.
-    https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2004.00005.x
+The package provides the :func:`fit_ellipsoid` function, which uses a
+Radial Basis (function) Representation (RBR) together with the
+ellipsoid-specific constraint to fit an ellipsoid to scattered 3-D point
+data.  A synthetic data generator and residual utilities are also included.
 """
 
 from .ellipsoid_fit import (
