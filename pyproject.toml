@@ -3,15 +3,15 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.backends.legacy:build"
 
 [project]
-name = "ellipsoid-fitting"
+name = "rbr-ellipsoid-fitting"
 version = "1.0.0"
-description = "Least-squares ellipsoid-specific fitting (Li & Griffiths, 2004)"
+description = "RBR with Ellipsoid Constraint — Implicit fitting using radial basis functions (Li, 2004, Computer Graphics Forum)"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
     { name = "QL-UoHull" }
 ]
-keywords = ["ellipsoid", "fitting", "least-squares", "3D", "geometry"]
+keywords = ["radial basis functions", "implicit fitting", "ellipsoid", "RBR", "3D geometry", "point cloud"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

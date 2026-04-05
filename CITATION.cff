@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 title: >-
-  Ellipsoid Fitting via Least Squares with Ellipsoid-Specific
-  Constraints (Li & Griffiths, 2004) — Python Implementation
+  RBR with Ellipsoid Constraint — Implicit Fitting Using Radial Basis
+  Functions (Li, 2004) — Python Implementation
 message: >-
   If you use this software in your research, please cite both the
   original paper (below) and this software repository.
@@ -10,30 +10,33 @@ authors:
   - name: QL-UoHull
     affiliation: University of Hull
 repository-code: >-
-  https://github.com/QL-UoHull/Ellipsoid-Fitting-via-Least-Squares-with-Ellipsoid-Specific-Constraints-Li-Griffiths-2004-
+  https://github.com/QL-UoHull/RBR-with-Ellipsoid-Constraint
 license: MIT
 version: 1.0.0
 date-released: '2024-01-01'
 keywords:
+  - implicit surface fitting
+  - radial basis functions
   - ellipsoid fitting
-  - least squares
+  - ellipsoidal constraint
   - 3D geometry
-  - constrained optimisation
   - point cloud
+  - RBR
 references:
   - type: article
-    title: Least squares ellipsoid specific fitting
+    title: >-
+      Implicit fitting using radial basis functions with ellipsoidal
+      constraint
     authors:
       - family-names: Li
         given-names: Qingde
-      - family-names: Griffiths
-        given-names: John G.
-    collection-title: >-
-      Proceedings of the Geometric Modeling and Processing, 2004
-    publisher:
-      name: IEEE
-    pages: 335-340
+    journal: Computer Graphics Forum
+    volume: 23
+    issue: 1
+    pages: 89-96
     year: 2004
-    doi: 10.1109/GMAP.2004.1290055
+    publisher:
+      name: Wiley/Blackwell
+    doi: 10.1111/j.1467-8659.2004.00756.x
     url: >-
-      https://www.researchgate.net/publication/4070857_Least_squares_ellipsoid_specific_fitting
+      https://doi.org/10.1111/j.1467-8659.2004.00756.x

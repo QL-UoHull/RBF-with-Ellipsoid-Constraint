@@ -1,5 +1,11 @@
 """
-Basic usage example: fit an ellipsoid to a synthetic noisy point cloud.
+Basic usage example: fit an ellipsoid to a synthetic noisy point cloud
+using RBF implicit fitting with ellipsoidal constraint.
+
+Reference:
+    Li, Q. (2004). "Implicit fitting using radial basis functions with
+    ellipsoidal constraint." Computer Graphics Forum, 23(1), 89-96.
+    Wiley/Blackwell. https://doi.org/10.1111/j.1467-8659.2004.00756.x
 
 Run with:
     python examples/basic_example.py
@@ -31,17 +37,19 @@ pts = generate_ellipsoid_points(
 x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
 
 # -------------------------------------------------------------------
-# 2.  Fit the ellipsoid
+# 2.  Fit the ellipsoid using RBR with Ellipsoid Constraint
 # -------------------------------------------------------------------
 result = fit_ellipsoid(x, y, z)
 
 print("=" * 60)
-print("Ellipsoid Fitting  (Li & Griffiths, 2004)")
+print("RBR with Ellipsoid Constraint  (Li, CGF 2004)")
 print("=" * 60)
 print(f"\nTrue  centre : {TRUE_CENTRE}")
 print(f"Fitted centre: {result['centre'].round(4)}")
 print(f"\nTrue  radii  : {np.sort(TRUE_RADII)[::-1]}")
 print(f"Fitted radii : {result['radii'].round(4)}")
+print(f"\nRBF weights  : {result['rbf_weights'].shape[0]} values, "
+      f"‖w‖ = {np.linalg.norm(result['rbf_weights']):.4f}")
 
 rms = residuals_rms(x, y, z, result)
 print(f"\nRMS algebraic residual: {rms:.6f}")
@@ -73,7 +81,7 @@ ys2 = pts_mesh[:, 1].reshape(shape) + cy
 zs2 = pts_mesh[:, 2].reshape(shape) + cz
 
 ax.plot_surface(xs2, ys2, zs2, alpha=0.15, color="orange")
-ax.set_title("Li–Griffiths Ellipsoid Fit")
+ax.set_title("RBR with Ellipsoid Constraint (Li, CGF 2004)")
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 ax.set_zlabel("z")
