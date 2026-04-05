@@ -1,10 +1,10 @@
 cff-version: 1.2.0
 title: >-
-  RBR with Ellipsoid Constraint — Implicit Fitting Using Radial Basis
-  Functions (Li, 2004) — Python Implementation
+  RBF with Ellipsoid Constraint – Python Implementation
+  (Li & Griffiths, 2004)
 message: >-
   If you use this software in your research, please cite both the
-  original paper (below) and this software repository.
+  original paper(s) (below) and this software repository.
 type: software
 authors:
   - name: QL-UoHull
@@ -12,21 +12,41 @@ authors:
 repository-code: >-
   https://github.com/QL-UoHull/RBR-with-Ellipsoid-Constraint
 license: MIT
-version: 1.0.0
+version: 2.0.0
 date-released: '2024-01-01'
 keywords:
   - implicit surface fitting
   - radial basis functions
   - ellipsoid fitting
-  - ellipsoidal constraint
+  - radial basis functions
+  - RBF
+  - surface reconstruction
+  - least squares
   - 3D geometry
   - point cloud
-  - RBR
+  - bone reconstruction
 references:
   - type: article
     title: >-
-      Implicit fitting using radial basis functions with ellipsoidal
-      constraint
+      Radial basis functions for surface reconstruction from unorganised
+      point clouds with applications to bone reconstruction
+    authors:
+      - family-names: Li
+        given-names: Qingde
+      - family-names: Griffiths
+        given-names: John G.
+    journal: Computer Graphics Forum
+    volume: 23
+    issue: 1
+    pages: 67-78
+    year: 2004
+    publisher:
+      name: Wiley-Blackwell
+    doi: 10.1111/j.1467-8659.2004.00005.x
+    url: >-
+      https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2004.00005.x
+  - type: conference-paper
+    title: Least squares ellipsoid specific fitting
     authors:
       - family-names: Li
         given-names: Qingde
