@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Python implementation of the **implicit fitting using radial basis functions
-with ellipsoidal constraint** algorithm described in:
+(RBFs) with ellipsoidal constraint** algorithm described in:
 
 > **Reference paper:**  
 > Li, Q. (2004). *Implicit fitting using radial basis functions with
@@ -17,9 +17,10 @@ with ellipsoidal constraint** algorithm described in:
 
 ## Overview
 
-The repository implements the **Radial Basis (function) Representation (RBR)
-with Ellipsoid Constraint** method for fitting an implicit ellipsoidal surface
-to scattered 3-D point data.
+The repository name **RBR** stands for **Radial Basis (function) Representation**,
+the term used by the author for the RBF-based implicit fitting approach combined
+with an ellipsoid-specific constraint.  The method fits an implicit ellipsoidal
+surface to scattered 3-D point data.
 
 ### Key idea
 
