@@ -1,6 +1,6 @@
 """
 Multi-format example: load a 3-D point cloud from various file formats and
-fit an ellipsoid using both algorithms in the package.
+fit an ellipsoid using RBF with Ellipsoid Constraint.
 
 Supported input formats demonstrated here:
   .csv  .obj  .ply  .xyz  .txt  .pts  .m  .npy  .npz
@@ -22,12 +22,10 @@ matplotlib.use("Agg")          # headless backend so the script runs without a d
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-from ellipsoid_fitting import (
+from rbf_ellipsoid_constraint import (
     load_point_cloud,
-    fit_ellipsoid,
     fit_rbf_ellipsoid_linear,
     evaluate_model_linear,
-    residuals_rms,
     FORMAT_LOADERS,
 )
 
@@ -45,17 +43,6 @@ def _print_sep(title=""):
         print(f"\n{'─' * (pad // 2)} {title} {'─' * (pad - pad // 2)}")
     else:
         print("─" * width)
-
-
-def demo_algebraic(pts: np.ndarray, label: str) -> None:
-    """Fit using the algebraic Li–Griffiths (2004) method."""
-    x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
-    result = fit_ellipsoid(x, y, z)
-    rms = residuals_rms(x, y, z, result)
-    print(f"  [Algebraic] Centre : {result['centre'].round(4)}")
-    print(f"  [Algebraic] Radii  : {result['radii'].round(4)}")
-    print(f"  [Algebraic] RMS    : {rms:.6f}")
-    return result
 
 
 def demo_rbf(pts: np.ndarray, label: str, smooth: float = 0.05):
@@ -80,46 +67,17 @@ def demo_rbf(pts: np.ndarray, label: str, smooth: float = 0.05):
 # Visualisation
 # ---------------------------------------------------------------------------
 
-def visualise_and_save(pts, rbf_result, algebraic_result, label, out_path):
-    """Save a side-by-side scatter + surface plot."""
+def visualise_and_save(pts, rbf_result, label, out_path):
+    """Save a scatter + RBF isosurface plot."""
     try:
         from skimage import measure
         has_skimage = True
     except ImportError:
         has_skimage = False
 
-    fig = plt.figure(figsize=(14, 6))
-
-    # ---- Left panel: scatter coloured by algebraic distance ----
-    ax1 = fig.add_subplot(121, projection="3d")
-    ax1.scatter(
-        pts[:, 0], pts[:, 1], pts[:, 2],
-        s=4, alpha=0.6, c="steelblue", label="Points",
-    )
-    if algebraic_result is not None:
-        cx, cy, cz = algebraic_result["centre"]
-        r1, r2, r3 = algebraic_result["radii"]
-        axes = algebraic_result["axes"]
-        u = np.linspace(0, 2 * np.pi, 50)
-        v = np.linspace(0, np.pi, 25)
-        xs = r1 * np.outer(np.cos(u), np.sin(v))
-        ys = r2 * np.outer(np.sin(u), np.sin(v))
-        zs = r3 * np.outer(np.ones_like(u), np.cos(v))
-        shape = xs.shape
-        pm = np.column_stack([xs.ravel(), ys.ravel(), zs.ravel()]) @ axes.T
-        ax1.plot_surface(
-            pm[:, 0].reshape(shape) + cx,
-            pm[:, 1].reshape(shape) + cy,
-            pm[:, 2].reshape(shape) + cz,
-            alpha=0.15, color="orange",
-        )
-    ax1.set_title(f"Algebraic fit\n({label})")
-    ax1.set_xlabel("x"); ax1.set_ylabel("y"); ax1.set_zlabel("z")
-    ax1.legend(fontsize=7)
-
-    # ---- Right panel: RBF isosurface (requires scikit-image) ----
-    ax2 = fig.add_subplot(122, projection="3d")
-    ax2.scatter(
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111, projection="3d")
+    ax.scatter(
         pts[:, 0], pts[:, 1], pts[:, 2],
         s=4, alpha=0.4, c="k", label="Points",
     )
@@ -138,7 +96,7 @@ def visualise_and_save(pts, rbf_result, algebraic_result, label, out_path):
             step = 2 * limit / (res - 1)
             verts_w = verts * step - limit
             verts_w = verts_w * scale + cent
-            ax2.plot_trisurf(
+            ax.plot_trisurf(
                 verts_w[:, 0], verts_w[:, 1], verts_w[:, 2],
                 triangles=faces, color="lime", alpha=0.35,
                 edgecolor="none", shade=True,
@@ -146,10 +104,10 @@ def visualise_and_save(pts, rbf_result, algebraic_result, label, out_path):
         except Exception:
             pass
     elif rbf_result is not None:
-        ax2.set_title("Install scikit-image for RBF isosurface")
-    ax2.set_title(f"RBF isosurface\n({label})")
-    ax2.set_xlabel("x"); ax2.set_ylabel("y"); ax2.set_zlabel("z")
-    ax2.legend(fontsize=7)
+        ax.set_title("Install scikit-image for RBF isosurface")
+    ax.set_title(f"RBF with Ellipsoid Constraint\n({label})")
+    ax.set_xlabel("x"); ax.set_ylabel("y"); ax.set_zlabel("z")
+    ax.legend(fontsize=7)
 
     plt.tight_layout()
     plt.savefig(out_path, dpi=100)
@@ -176,13 +134,7 @@ def run_on_file(filepath: str) -> None:
 
     print(f"  Points : {len(pts)}")
 
-    alg = None
     rbf = None
-    try:
-        alg = demo_algebraic(pts, label)
-    except Exception as exc:
-        print(f"  [Algebraic] FAILED: {exc}")
-
     try:
         rbf = demo_rbf(pts, label)
     except Exception as exc:
@@ -193,7 +145,7 @@ def run_on_file(filepath: str) -> None:
         f"fit_{os.path.splitext(label)[0]}.png",
     )
     try:
-        visualise_and_save(pts, rbf, alg, label, out_png)
+        visualise_and_save(pts, rbf, label, out_png)
     except Exception as exc:
         print(f"  [Plot] FAILED: {exc}")
 
@@ -214,7 +166,7 @@ def main():
         if not data_files:
             print("No data files found in data/.  Run the data generator first.")
             return
-        _print_sep("Multi-format ellipsoid fitting demo")
+        _print_sep("Multi-format RBF with Ellipsoid Constraint demo")
         print(f"  Found {len(data_files)} data file(s).")
         for path in data_files:
             run_on_file(path)

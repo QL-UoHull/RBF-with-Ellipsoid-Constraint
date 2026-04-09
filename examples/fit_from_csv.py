@@ -3,9 +3,11 @@ CSV dataset example: load a CSV file and fit an ellipsoid using RBF implicit
 fitting with ellipsoidal constraint.
 
 Reference:
-    Li, Q. (2004). "Implicit fitting using radial basis functions with
-    ellipsoidal constraint." Computer Graphics Forum, 23(1), 89-96.
-    Wiley/Blackwell. https://doi.org/10.1111/j.1467-8659.2004.00756.x
+    Li, Q. and Griffiths, J. G. (2004). "Radial basis functions for surface
+    reconstruction from unorganised point clouds with applications to bone
+    reconstruction." Computer Graphics Forum, 23(1), 67–78.
+    Wiley-Blackwell.
+    https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2004.00005.x
 
 Run with:
     python examples/fit_from_csv.py
@@ -16,7 +18,10 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import numpy as np
-from ellipsoid_fitting import fit_ellipsoid, residuals_rms
+from rbf_ellipsoid_constraint import (
+    fit_rbf_ellipsoid_linear,
+    evaluate_model_linear,
+)
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 
@@ -26,16 +31,22 @@ def fit_from_csv(csv_path: str) -> None:
     print("-" * 60)
 
     data = np.loadtxt(csv_path, delimiter=",", skiprows=1)
-    x, y, z = data[:, 0], data[:, 1], data[:, 2]
-    print(f"  Points loaded  : {len(x)}")
+    pts = data[:, :3]
+    print(f"  Points loaded  : {len(pts)}")
 
-    result = fit_ellipsoid(x, y, z)
-    rms = residuals_rms(x, y, z, result)
+    result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+    if result is None:
+        print("  Fit failed: no valid eigenvalue found.")
+        return
 
-    print(f"  Centre         : {result['centre'].round(4)}")
-    print(f"  Radii          : {result['radii'].round(4)}")
-    print(f"  RMS residual   : {rms:.6f}")
-    print(f"  RBF weights    : {result['rbf_weights'].shape[0]} values")
+    alpha, beta, cent, scale = result
+    norm_pts = (pts - cent) / scale
+    vals = evaluate_model_linear(norm_pts, norm_pts, alpha, beta)
+
+    print(f"  Centroid       : {cent.round(4)}")
+    print(f"  Scale          : {scale:.4f}")
+    print(f"  Mean |F|       : {float(np.mean(np.abs(vals))):.6f}")
+    print(f"  RBF weights    : {alpha.shape[0]} values")
 
 
 if __name__ == "__main__":
