@@ -32,13 +32,8 @@ from .loaders import (
     load_npz,
     FORMAT_LOADERS,
 )
-from .rbf_ellipsoid import (
-    fit_rbf_ellipsoid_linear,
-    evaluate_model_linear,
-)
-
 __all__ = [
-    # Algebraic ellipsoid fitting (Li & Griffiths, GMAP 2004)
+    # Algebraic ellipsoid fitting (Li, CGF 2004)
     "fit_ellipsoid",
     "algebraic_distance",
     "residuals_rms",
@@ -54,9 +49,6 @@ __all__ = [
     "load_npy",
     "load_npz",
     "FORMAT_LOADERS",
-    # RBF with Ellipsoid Constraint (Li & Griffiths, CGF 2004)
-    "fit_rbf_ellipsoid_linear",
-    "evaluate_model_linear",
 ]
 
 __version__ = "1.0.0"
