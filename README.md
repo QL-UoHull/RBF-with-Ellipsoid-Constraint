@@ -81,7 +81,6 @@ RBF-with-Ellipsoid-Constraint/
 ├── rbf_implicit_fitting/
 │   ├── __init__.py
 │   ├── ellipsoid_fit.py       # Core RBF fitting algorithm (Li, CGF 2004)
-│   ├── rbf_ellipsoid.py       # Alternative lower-level RBF interface
 │   ├── loaders.py             # Multi-format point-cloud loader
 │   └── data_generator.py      # Synthetic data generator
 ├── data/
@@ -104,8 +103,8 @@ RBF-with-Ellipsoid-Constraint/
 │   └── rbf_implicit_fitting_demo.ipynb
 ├── tests/
 │   ├── __init__.py
-│   ├── test_ellipsoid_fit.py       # Tests for fit_ellipsoid (22 tests)
-│   └── test_loaders_and_rbf.py     # Tests for loaders + RBF (52 tests)
+│   ├── test_ellipsoid_fit.py       # Tests for fit_ellipsoid
+│   └── test_loaders_and_rbf.py     # Tests for loaders
 ├── CITATION.cff
 ├── LICENSE
 ├── pyproject.toml
@@ -199,39 +198,6 @@ implicit fitting with ellipsoidal constraint algorithm (Li, CGF 2004).
 Returns a `dict` with keys `centre`, `radii`, `axes`, `algebraic`,
 `rbf_weights`, and `poly_coeffs`.
 
-### Lower-level / alternative RBF interface
-
-#### `fit_rbf_ellipsoid_linear(points, smooth=0.0) → (alpha, beta, centroid, scale) | None`
-
-Fit an implicit ellipsoidal surface using a linear RBF kernel
-(Li, CGF 2004).
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `points` | ndarray (N, 3) | 3-D surface points |
-| `smooth` | float | Diagonal regulariser; increase for noisy data (default 0) |
-
-Returns a 4-tuple `(alpha, beta, centroid, scale)` where `alpha` are the
-RBF weights (shape `(N,)`), `beta` the polynomial coefficients (shape
-`(10,)`), and `centroid` / `scale` are normalisation parameters.  Returns
-`None` if no valid eigenvalue is found.
-
-#### `evaluate_model_linear(eval_pts, norm_pts, alpha, beta, chunk_size=5000) → ndarray (M,)`
-
-Evaluate the implicit surface `F(q)` at arbitrary query points (both arrays
-must be in normalised coordinates).  Points where `F(q) ≈ 0` lie on the
-reconstructed surface.
-
----
-
-Four datasets are included in `data/` (header row: `x,y,z`):
-
-| File | Points | Description |
-|------|--------|-------------|
-| `synthetic_ellipsoid_low_noise.csv` | 300 | Axis-aligned ellipsoid, centre (1,2,3), radii (5,3,2), σ=0.05 |
-| `synthetic_ellipsoid_rotated.csv` | 500 | Arbitrarily rotated ellipsoid, radii (6,4,2.5), σ=0.15 |
-| `synthetic_sphere_like.csv` | 200 | Near-spherical ellipsoid (radii all ≈ 4), centre (5,−3,1), σ=0.10 |
-| `Tibia.csv` | — | Real-world bone surface scan |
 ---
 
 ### Synthetic data generator
