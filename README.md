@@ -8,30 +8,18 @@ Python implementation of the **implicit fitting using radial basis functions
 (RBFs) with ellipsoidal constraint** algorithm described in:
 
 > **Reference paper:**  
-> Li, Q. (2004). *Implicit fitting using radial basis functions with
+> Li, Q, et al. (2004). *Implicit fitting using radial basis functions with
 > ellipsoidal constraint.*  
 > *Computer Graphics Forum*, 23(1), 89–96. Wiley/Blackwell.  
 > DOI: [10.1111/j.1467-8659.2004.00756.x](https://doi.org/10.1111/j.1467-8659.2004.00756.x)
-# RBF with Ellipsoid Constraint
 
-[![Tests](https://img.shields.io/badge/tests-74%20passed-brightgreen)](#running-tests)
-[![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-Python implementation of two complementary **ellipsoid surface-fitting**
-algorithms and a unified **multi-format data loader** supporting CSV, OBJ,
-PLY, XYZ, MATLAB `.m`, and NumPy formats.
-
----
 
 ## Algorithms
 
-### 1 · Algebraic Least-Squares Fitting (Li & Griffiths, GMAP 2004)
-
-> Li, Q. and Griffiths, J. G. (2004).  
-> *Least squares ellipsoid specific fitting.*  
-> Proceedings of the Geometric Modeling and Processing, 2004. IEEE, pp. 335–340.  
-> DOI: [10.1109/GMAP.2004.1290055](https://doi.org/10.1109/GMAP.2004.1290055)
+Fits an implicit surface `F(x,y,z) = 0` using a **linear RBF kernel**
+`φ(r) = r` together with a second-order polynomial basis.  An ellipsoid
+constraint is imposed via a generalised eigenvalue problem, ensuring that the
+reconstructed surface is topologically an ellipsoid.
 
 The repository name **RBR** stands for **Radial Basis (function) Representation**,
 the term used by the author for the RBF-based implicit fitting approach combined
@@ -87,18 +75,7 @@ Fits a general algebraic ellipsoid `F(x,y,z) = 0` to 3-D point data using a
 constrained least-squares approach.  The constraint matrix (with parameter
 `k = 4`) guarantees that only ellipsoidal solutions are admitted.
 
-### 2 · RBF with Ellipsoid Constraint (Li & Griffiths, CGF 2004)
 
-> Li, Q. and Griffiths, J. G. (2004).  
-> *Radial basis functions for surface reconstruction from unorganised point
-> clouds with applications to bone reconstruction.*  
-> Computer Graphics Forum, 23(1), 67–78. Wiley-Blackwell.  
-> DOI: [10.1111/j.1467-8659.2004.00005.x](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2004.00005.x)
-
-Fits an implicit surface `F(x,y,z) = 0` using a **linear RBF kernel**
-`φ(r) = r` together with a second-order polynomial basis.  An ellipsoid
-constraint is imposed via a generalised eigenvalue problem, ensuring that the
-reconstructed surface is topologically an ellipsoid.
 
 ---
 
@@ -179,36 +156,6 @@ Optional (for isosurface visualisation): `scikit-image`.
 
 ## Quick start
 
-### Algebraic fitting
-
-```python
-import numpy as np
-from ellipsoid_fitting import fit_ellipsoid, generate_ellipsoid_points
-
-# Generate a synthetic noisy point cloud
-pts = generate_ellipsoid_points(
-    centre=(1.0, 2.0, 3.0),
-    radii=(5.0, 3.0, 2.0),
-    n_points=300,
-    noise_std=0.05,
-)
-
-# Fit the ellipsoid using RBR with ellipsoidal constraint
-result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-
-print("Centre:", result["centre"])      # → [1.0, 2.0, 3.0]
-print("Radii :", result["radii"])       # → [5.0, 3.0, 2.0] (descending)
-print("Axes  :", result["axes"])        # 3×3 orthonormal matrix
-print("RBF w :", result["rbf_weights"].shape)  # (300,)
-pts = generate_ellipsoid_points(centre=(1, 2, 3), radii=(5, 3, 2),
-                                 n_points=300, noise_std=0.05)
-result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-
-print("Centre:", result["centre"])   # → [1.0, 2.0, 3.0]
-print("Radii :", result["radii"])    # → [5.0, 3.0, 2.0]  (sorted descending)
-```
-
-### RBF fitting
 
 ```python
 from ellipsoid_fitting import (
@@ -255,103 +202,6 @@ pts = load_point_cloud("data/synthetic_ellipsoid_low_noise.csv")  # CSV
 
 ---
 
-## Running tests
-
-```bash
-pytest tests/ -v
-```
-
-All 25 tests should pass.
-All 74 tests should pass.
-
----
-
-## Running examples
-
-```bash
-# Algebraic fit on a synthetic noisy point cloud (with 3-D visualisation)
-python examples/basic_example.py
-
-# Fit all CSV datasets and print results
-python examples/fit_from_csv.py
-
-# Multi-format demo: load each supported file type, run both algorithms
-python examples/fit_multiformat.py
-
-# Pass a specific file to the multi-format demo
-python examples/fit_multiformat.py data/synthetic_ellipsoid.obj
-python examples/fit_multiformat.py data/synthetic_ellipsoid.ply
-python examples/fit_multiformat.py data/Tibia.csv
-```
-
----
-
-## Jupyter notebook
-
-An end-to-end reproducible workflow is provided in
-`notebooks/ellipsoid_fitting_demo.ipynb`.  Launch with:
-
-```bash
-jupyter notebook notebooks/ellipsoid_fitting_demo.ipynb
-```
-
----
-
-## API reference
-
-### `fit_ellipsoid(x, y, z, k=4.0, epsilon=None, k_neighbours=15) → dict`
-
-Fit an ellipsoid to 3-D point data using RBF implicit fitting.
-### Data loader
-
-#### `load_point_cloud(filename) → ndarray (N, 3)`
-
-Auto-detect file format from extension and return an (N, 3) NumPy array.
-
-Individual loaders (`load_csv`, `load_obj`, `load_ply`, `load_xyz`,
-`load_matlab`, `load_npy`, `load_npz`) are also exported and can be called
-directly.
-
----
-
-### Algebraic fitting
-
-#### `fit_ellipsoid(x, y, z, k=4.0) → dict`
-
-Fit an ellipsoid to 3-D point data (Li & Griffiths, GMAP 2004).
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `x`, `y`, `z` | array-like (N,) | Cartesian coordinates (≥ 10 points) |
-| `k` | float | Constraint parameter, k ∈ (0, 4]; default 4.0 |
-| `epsilon` | float or None | Off-surface displacement; auto-set if None |
-| `k_neighbours` | int | Neighbours for local-PCA normal estimation; default 15 |
-
-**Returns** a `dict` with keys:
-
-| Key | Shape | Description |
-|-----|-------|-------------|
-| `centre` | `(3,)` | Ellipsoid centre |
-| `radii` | `(3,)` | Semi-axis lengths (descending) |
-| `axes` | `(3, 3)` | Unit-vector columns (axes of the ellipsoid) |
-| `M` | `(4, 4)` | Homogeneous quadric matrix |
-| `coefficients` | `(10,)` | Algebraic coefficients `[A,B,C,D,E,F,G,H,I,J]` |
-| `rbf_weights` | `(N,)` | Biharmonic RBF weights for the N surface-point centres |
-
-### `generate_ellipsoid_points(centre, radii, rotation, n_points, noise_std, seed)`
-
-Generate synthetic 3-D surface points on an (optionally rotated) ellipsoid.
-
-### `algebraic_distance(x, y, z, coefficients) → ndarray`
-#### `algebraic_distance(x, y, z, coefficients) → ndarray (N,)`
-
-Evaluate the polynomial part F(x,y,z) = β^T p(x) for each data point.
-
-#### `residuals_rms(x, y, z, result) → float`
-
-Root-mean-square algebraic residual.
-
----
 
 ### RBF fitting
 
@@ -392,21 +242,6 @@ Four datasets are included in `data/` (header row: `x,y,z`):
 
 Generate 3-D points sampled uniformly on an ellipsoid surface.
 
----
-
-## Datasets
-
-| File | Points | Description |
-|------|--------|-------------|
-| `synthetic_ellipsoid_low_noise.csv` | 300 | Axis-aligned, centre (1,2,3), radii (5,3,2), σ=0.05 |
-| `synthetic_ellipsoid_rotated.csv` | 500 | Arbitrarily rotated, radii (6,4,2.5), σ=0.15 |
-| `synthetic_sphere_like.csv` | 200 | Near-spherical, radii ≈ 4, centre (5,−3,1), σ=0.10 |
-| `synthetic_ellipsoid.obj` | 200 | Same cloud as above in Wavefront OBJ format |
-| `synthetic_ellipsoid.ply` | 200 | Same cloud in PLY ASCII format |
-| `synthetic_ellipsoid_binary.ply` | 200 | Same cloud in PLY binary (little-endian) |
-| `synthetic_ellipsoid.xyz` | 200 | Same cloud in plain XYZ format |
-| `synthetic_ellipsoid.m` | 200 | Same cloud as MATLAB `data = [...];` script |
-| `Tibia.csv` | 1 484 | Real tibia bone surface scan |
 
 ---
 
