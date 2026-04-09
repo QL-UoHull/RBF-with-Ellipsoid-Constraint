@@ -37,4 +37,4 @@ vis = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["ellipsoid_fitting*"]
+include = ["rbf_implicit_fitting*"]
