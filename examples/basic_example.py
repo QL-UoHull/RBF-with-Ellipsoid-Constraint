@@ -3,9 +3,10 @@ Basic usage example: fit an ellipsoid to a synthetic noisy point cloud
 using RBF implicit fitting with ellipsoidal constraint.
 
 Reference:
-    Li, Q. (2004). "Implicit fitting using radial basis functions with
-    ellipsoidal constraint." Computer Graphics Forum, 23(1), 89-96.
-    Wiley/Blackwell. https://doi.org/10.1111/j.1467-8659.2004.00756.x
+    Li, Q. and Griffiths, J. G. (2004). "Radial basis functions for surface
+    reconstruction from unorganised point clouds with applications to bone
+    reconstruction." Computer Graphics Forum, 23(1), 67–78.
+    Wiley-Blackwell. https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2004.00005.x
 
 Run with:
     python examples/basic_example.py
@@ -19,7 +20,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-from ellipsoid_fitting import fit_ellipsoid, generate_ellipsoid_points, residuals_rms
+from rbf_ellipsoid_constraint import (
+    fit_rbf_ellipsoid_linear,
+    evaluate_model_linear,
+    generate_ellipsoid_points,
+)
 
 # -------------------------------------------------------------------
 # 1.  Generate a synthetic noisy point cloud on a known ellipsoid
@@ -34,25 +39,27 @@ pts = generate_ellipsoid_points(
     noise_std=0.05,
     seed=42,
 )
-x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
 
 # -------------------------------------------------------------------
-# 2.  Fit the ellipsoid using RBR with Ellipsoid Constraint
+# 2.  Fit using RBF with Ellipsoid Constraint
 # -------------------------------------------------------------------
-result = fit_ellipsoid(x, y, z)
+result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+if result is None:
+    print("Fit failed: no valid eigenvalue found.")
+    sys.exit(1)
+
+alpha, beta, cent, scale = result
+norm_pts = (pts - cent) / scale
+residuals = evaluate_model_linear(norm_pts, norm_pts, alpha, beta)
 
 print("=" * 60)
-print("RBR with Ellipsoid Constraint  (Li, CGF 2004)")
+print("RBF with Ellipsoid Constraint  (Li & Griffiths, CGF 2004)")
 print("=" * 60)
 print(f"\nTrue  centre : {TRUE_CENTRE}")
-print(f"Fitted centre: {result['centre'].round(4)}")
-print(f"\nTrue  radii  : {np.sort(TRUE_RADII)[::-1]}")
-print(f"Fitted radii : {result['radii'].round(4)}")
-print(f"\nRBF weights  : {result['rbf_weights'].shape[0]} values, "
-      f"‖w‖ = {np.linalg.norm(result['rbf_weights']):.4f}")
-
-rms = residuals_rms(x, y, z, result)
-print(f"\nRMS algebraic residual: {rms:.6f}")
+print(f"Fitted centroid: {cent.round(4)}")
+print(f"\nScale    : {scale:.4f}")
+print(f"Mean |F| : {np.mean(np.abs(residuals)):.6f}  (≈0 on surface)")
+print(f"Max  |F| : {np.max(np.abs(residuals)):.6f}")
 print("=" * 60)
 
 # -------------------------------------------------------------------
@@ -60,28 +67,8 @@ print("=" * 60)
 # -------------------------------------------------------------------
 fig = plt.figure(figsize=(9, 7))
 ax = fig.add_subplot(111, projection="3d")
-ax.scatter(x, y, z, s=4, alpha=0.5, label="Noisy data")
-
-# Draw the fitted ellipsoid as a mesh
-cx, cy, cz = result["centre"]
-r1, r2, r3 = result["radii"]
-axes = result["axes"]
-
-u = np.linspace(0, 2 * np.pi, 60)
-v = np.linspace(0, np.pi, 30)
-xs = r1 * np.outer(np.cos(u), np.sin(v))
-ys = r2 * np.outer(np.sin(u), np.sin(v))
-zs = r3 * np.outer(np.ones_like(u), np.cos(v))
-
-# Apply axes rotation and translate to centre
-shape = xs.shape
-pts_mesh = np.column_stack([xs.ravel(), ys.ravel(), zs.ravel()]) @ axes.T
-xs2 = pts_mesh[:, 0].reshape(shape) + cx
-ys2 = pts_mesh[:, 1].reshape(shape) + cy
-zs2 = pts_mesh[:, 2].reshape(shape) + cz
-
-ax.plot_surface(xs2, ys2, zs2, alpha=0.15, color="orange")
-ax.set_title("RBR with Ellipsoid Constraint (Li, CGF 2004)")
+ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], s=4, alpha=0.5, label="Noisy data")
+ax.set_title("RBF with Ellipsoid Constraint (Li & Griffiths, CGF 2004)")
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 ax.set_zlabel("z")
