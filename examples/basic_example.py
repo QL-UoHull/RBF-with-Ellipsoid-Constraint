@@ -37,12 +37,12 @@ pts = generate_ellipsoid_points(
 x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
 
 # -------------------------------------------------------------------
-# 2.  Fit the ellipsoid using RBR with Ellipsoid Constraint
+# 2.  Fit the ellipsoid using RBF with Ellipsoid Constraint
 # -------------------------------------------------------------------
 result = fit_ellipsoid(x, y, z)
 
 print("=" * 60)
-print("RBR with Ellipsoid Constraint  (Li, CGF 2004)")
+print("RBF with Ellipsoid Constraint  (Li, CGF 2004)")
 print("=" * 60)
 print(f"\nTrue  centre : {TRUE_CENTRE}")
 print(f"Fitted centre: {result['centre'].round(4)}")
@@ -81,7 +81,7 @@ ys2 = pts_mesh[:, 1].reshape(shape) + cy
 zs2 = pts_mesh[:, 2].reshape(shape) + cz
 
 ax.plot_surface(xs2, ys2, zs2, alpha=0.15, color="orange")
-ax.set_title("RBR with Ellipsoid Constraint (Li, CGF 2004)")
+ax.set_title("RBF with Ellipsoid Constraint (Li, CGF 2004)")
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 ax.set_zlabel("z")

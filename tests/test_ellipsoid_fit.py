@@ -77,7 +77,7 @@ class TestGenerateEllipsoidPoints:
 
 
 # ---------------------------------------------------------------------------
-# Fitting tests (RBR with Ellipsoid Constraint)
+# Fitting tests (RBF with Ellipsoid Constraint)
 # ---------------------------------------------------------------------------
 
 class TestFitEllipsoid:

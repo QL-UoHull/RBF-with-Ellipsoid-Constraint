@@ -1,8 +1,7 @@
 """
-RBR with Ellipsoid Constraint — Implicit Fitting Using Radial Basis Functions
+RBF with Ellipsoid Constraint — Implicit Fitting Using Radial Basis Functions
 
-1. **Li–Griffiths (2004)** algebraic least-squares fitting
-   (``fit_ellipsoid``).
+Python implementation of the RBF-based implicit fitting algorithm from:
 
     Li, Q. (2004).
     "Implicit fitting using radial basis functions with ellipsoidal
@@ -10,10 +9,10 @@ RBR with Ellipsoid Constraint — Implicit Fitting Using Radial Basis Functions
     Computer Graphics Forum, 23(1), 89–96. Wiley/Blackwell.
     https://doi.org/10.1111/j.1467-8659.2004.00756.x
 
-The package provides the :func:`fit_ellipsoid` function, which uses a
-Radial Basis (function) Representation (RBR) together with the
-ellipsoid-specific constraint to fit an ellipsoid to scattered 3-D point
-data.  A synthetic data generator and residual utilities are also included.
+The package provides the :func:`fit_ellipsoid` function, which implements
+the RBF implicit fitting with ellipsoidal constraint algorithm from Li (2004)
+to fit an ellipsoid to scattered 3-D point data.  A synthetic data generator,
+multi-format data loader, and residual utilities are also included.
 """
 
 from .ellipsoid_fit import (
@@ -60,6 +59,6 @@ __all__ = [
     "evaluate_model_linear",
 ]
 
-__version__ = "2.0.0"
+__version__ = "1.0.0"
 __author__ = "QL-UoHull"
 __license__ = "MIT"

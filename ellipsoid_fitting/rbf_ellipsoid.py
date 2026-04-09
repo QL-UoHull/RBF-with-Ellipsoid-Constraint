@@ -2,12 +2,12 @@
 
 Python implementation of the algorithm described in:
 
-    Li, Q. and Griffiths, J. G. (2004).
-    "Radial basis functions for surface reconstruction from unorganised
-    point clouds with applications to bone reconstruction."
-    *Computer Graphics Forum*, 23(1), 67–78.
-    Wiley-Blackwell.
-    https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2004.00005.x
+    Li, Q. (2004).
+    "Implicit fitting using radial basis functions with ellipsoidal
+    constraint."
+    *Computer Graphics Forum*, 23(1), 89–96.
+    Wiley/Blackwell.
+    https://doi.org/10.1111/j.1467-8659.2004.00756.x
 
 The algorithm fits an implicit surface F(x, y, z) = 0 to a set of 3-D
 surface points using a **linear** radial basis function kernel
