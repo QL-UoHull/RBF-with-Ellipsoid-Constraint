@@ -48,7 +48,7 @@ def _print_sep(title=""):
 
 
 def demo_algebraic(pts: np.ndarray, label: str) -> None:
-    """Fit using the algebraic Li–Griffiths (2004) method."""
+    """Fit using the RBF implicit fitting with ellipsoidal constraint (Li, CGF 2004)."""
     x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
     result = fit_ellipsoid(x, y, z)
     rms = residuals_rms(x, y, z, result)
@@ -113,7 +113,7 @@ def visualise_and_save(pts, rbf_result, algebraic_result, label, out_path):
             pm[:, 2].reshape(shape) + cz,
             alpha=0.15, color="orange",
         )
-    ax1.set_title(f"Algebraic fit\n({label})")
+    ax1.set_title(f"RBF fit (Li, CGF 2004)\n({label})")
     ax1.set_xlabel("x"); ax1.set_ylabel("y"); ax1.set_zlabel("z")
     ax1.legend(fontsize=7)
 
