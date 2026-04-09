@@ -22,7 +22,7 @@ matplotlib.use("Agg")          # headless backend so the script runs without a d
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-from ellipsoid_fitting import (
+from rbf_implicit_fitting import (
     load_point_cloud,
     fit_ellipsoid,
     fit_rbf_ellipsoid_linear,

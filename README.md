@@ -78,7 +78,7 @@ the 10-term degree-2 polynomial basis.
 
 ```
 RBF-with-Ellipsoid-Constraint/
-├── ellipsoid_fitting/
+├── rbf_implicit_fitting/
 │   ├── __init__.py
 │   ├── ellipsoid_fit.py       # Core RBF fitting algorithm (Li, CGF 2004)
 │   ├── rbf_ellipsoid.py       # Alternative lower-level RBF interface
@@ -101,7 +101,7 @@ RBF-with-Ellipsoid-Constraint/
 │   ├── fit_from_csv.py        # Load CSV datasets and fit
 │   └── fit_multiformat.py     # Load any supported format and fit
 ├── notebooks/
-│   └── ellipsoid_fitting_demo.ipynb
+│   └── rbf_implicit_fitting_demo.ipynb
 ├── tests/
 │   ├── __init__.py
 │   ├── test_ellipsoid_fit.py       # Tests for fit_ellipsoid (22 tests)
@@ -137,7 +137,7 @@ Optional (for isosurface visualisation): `scikit-image`.
 
 
 ```python
-from ellipsoid_fitting import fit_ellipsoid, generate_ellipsoid_points
+from rbf_implicit_fitting import fit_ellipsoid, generate_ellipsoid_points
 import numpy as np
 
 pts = generate_ellipsoid_points(radii=(3, 2, 1), n_points=300, noise_std=0.05)
@@ -150,7 +150,7 @@ print("Radii: ", result["radii"])
 ### Loading different file formats
 
 ```python
-from ellipsoid_fitting import load_point_cloud
+from rbf_implicit_fitting import load_point_cloud
 
 # Auto-detect format from file extension
 pts = load_point_cloud("data/synthetic_ellipsoid.obj")   # Wavefront OBJ

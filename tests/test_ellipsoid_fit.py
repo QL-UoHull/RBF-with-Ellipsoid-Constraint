@@ -1,5 +1,5 @@
 """
-Unit tests for the ellipsoid_fitting package.
+Unit tests for the rbf_implicit_fitting package.
 
 Tests cover the RBF implicit fitting with ellipsoidal constraint algorithm
 described in:
@@ -15,7 +15,7 @@ Run with:
 import numpy as np
 import pytest
 
-from ellipsoid_fitting import (
+from rbf_implicit_fitting import (
     fit_ellipsoid,
     algebraic_distance,
     residuals_rms,

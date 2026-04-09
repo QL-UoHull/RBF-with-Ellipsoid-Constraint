@@ -320,7 +320,7 @@ def fit_ellipsoid(
     Examples
     --------
     >>> import numpy as np
-    >>> from ellipsoid_fitting import fit_ellipsoid, generate_ellipsoid_points
+    >>> from rbf_implicit_fitting import fit_ellipsoid, generate_ellipsoid_points
     >>> pts = generate_ellipsoid_points(centre=(1, 2, 3), radii=(5, 3, 2),
     ...                                  n_points=200, noise_std=0.05)
     >>> result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])

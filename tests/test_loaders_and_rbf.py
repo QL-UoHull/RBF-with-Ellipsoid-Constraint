@@ -12,7 +12,7 @@ import struct
 import numpy as np
 import pytest
 
-from ellipsoid_fitting import (
+from rbf_implicit_fitting import (
     load_point_cloud,
     load_csv,
     load_xyz,

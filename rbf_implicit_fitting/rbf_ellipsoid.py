@@ -94,8 +94,8 @@ def fit_rbf_ellipsoid_linear(
     Examples
     --------
     >>> import numpy as np
-    >>> from ellipsoid_fitting import generate_ellipsoid_points
-    >>> from ellipsoid_fitting.rbf_ellipsoid import fit_rbf_ellipsoid_linear
+    >>> from rbf_implicit_fitting import generate_ellipsoid_points
+    >>> from rbf_implicit_fitting.rbf_ellipsoid import fit_rbf_ellipsoid_linear
     >>> pts = generate_ellipsoid_points(radii=(3, 2, 1), n_points=200,
     ...                                  noise_std=0.02, seed=0)
     >>> result = fit_rbf_ellipsoid_linear(pts)
@@ -218,8 +218,8 @@ def evaluate_model_linear(
     Examples
     --------
     >>> import numpy as np
-    >>> from ellipsoid_fitting import generate_ellipsoid_points
-    >>> from ellipsoid_fitting.rbf_ellipsoid import (
+    >>> from rbf_implicit_fitting import generate_ellipsoid_points
+    >>> from rbf_implicit_fitting.rbf_ellipsoid import (
     ...     fit_rbf_ellipsoid_linear, evaluate_model_linear)
     >>> pts = generate_ellipsoid_points(radii=(3, 2, 1), n_points=200, seed=0)
     >>> result = fit_rbf_ellipsoid_linear(pts)

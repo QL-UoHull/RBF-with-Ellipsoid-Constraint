@@ -16,7 +16,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import numpy as np
-from ellipsoid_fitting import fit_ellipsoid, residuals_rms
+from rbf_implicit_fitting import fit_ellipsoid, residuals_rms
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 

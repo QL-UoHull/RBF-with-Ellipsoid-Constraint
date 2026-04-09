@@ -19,7 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-from ellipsoid_fitting import fit_ellipsoid, generate_ellipsoid_points, residuals_rms
+from rbf_implicit_fitting import fit_ellipsoid, generate_ellipsoid_points, residuals_rms
 
 # -------------------------------------------------------------------
 # 1.  Generate a synthetic noisy point cloud on a known ellipsoid
