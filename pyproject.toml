@@ -3,9 +3,9 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.backends.legacy:build"
 
 [project]
-name = "rbr-ellipsoid-fitting"
-version = "1.0.0"
-description = "RBR with Ellipsoid Constraint — Implicit fitting using radial basis functions (Li, 2004, Computer Graphics Forum)"
+name = "rbf-ellipsoid-constraint"
+version = "2.0.0"
+description = "RBF with Ellipsoid Constraint — Implicit fitting using radial basis functions (Li & Griffiths, CGF 2004)"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
@@ -37,4 +37,4 @@ vis = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["ellipsoid_fitting*"]
+include = ["rbf_ellipsoid_constraint*"]

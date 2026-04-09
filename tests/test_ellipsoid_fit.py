@@ -1,12 +1,11 @@
 """
-Unit tests for the ellipsoid_fitting package.
+Unit tests for the rbf_ellipsoid_constraint package.
 
-Tests cover the RBF implicit fitting with ellipsoidal constraint algorithm
-described in:
+Tests cover the RBF with Ellipsoid Constraint algorithm described in:
 
-    Li, Q. (2004). "Implicit fitting using radial basis functions with
-    ellipsoidal constraint." Computer Graphics Forum, 23(1), 89–96.
-    Wiley/Blackwell.
+    Li, Q. and Griffiths, J. G. (2004). "Radial basis functions for surface
+    reconstruction from unorganised point clouds with applications to bone
+    reconstruction." Computer Graphics Forum, 23(1), 67–78. Wiley-Blackwell.
 
 Run with:
     pytest tests/test_ellipsoid_fit.py -v
@@ -15,10 +14,9 @@ Run with:
 import numpy as np
 import pytest
 
-from ellipsoid_fitting import (
-    fit_ellipsoid,
-    algebraic_distance,
-    residuals_rms,
+from rbf_ellipsoid_constraint import (
+    fit_rbf_ellipsoid_linear,
+    evaluate_model_linear,
     generate_ellipsoid_points,
 )
 
@@ -77,137 +75,86 @@ class TestGenerateEllipsoidPoints:
 
 
 # ---------------------------------------------------------------------------
-# Fitting tests (RBR with Ellipsoid Constraint)
+# RBF fitting tests
 # ---------------------------------------------------------------------------
 
-class TestFitEllipsoid:
-    def test_basic_axis_aligned(self):
-        """Fit should recover centre and radii of an axis-aligned ellipsoid."""
-        true_centre = np.array([1.0, 2.0, 3.0])
-        true_radii = np.array([5.0, 3.0, 2.0])
-        pts = _make_data(true_centre, true_radii, n=400, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-
-        np.testing.assert_allclose(result["centre"], true_centre, atol=0.15)
-        np.testing.assert_allclose(
-            np.sort(result["radii"])[::-1],
-            np.sort(true_radii)[::-1],
-            atol=0.25,
-        )
-
-    def test_centred_at_origin(self):
-        pts = _make_data((0, 0, 0), (4, 3, 2), n=300, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        np.testing.assert_allclose(result["centre"], [0, 0, 0], atol=0.15)
-
-    def test_sphere_like(self):
-        """Near-spherical data: radii should all be close."""
-        pts = _make_data((0, 0, 0), (3, 3, 3), n=300, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        r = result["radii"]
-        assert r.max() / r.min() < 1.1
-
-    def test_output_keys(self):
+class TestFitRBFEllipsoid:
+    def test_basic_returns_tuple(self):
+        """fit_rbf_ellipsoid_linear should return a 4-tuple."""
         pts = _make_data((0, 0, 0), (3, 2, 1), n=200, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        for key in ("centre", "radii", "axes", "M", "coefficients", "rbf_weights"):
-            assert key in result
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        assert isinstance(alpha, np.ndarray)
+        assert isinstance(beta, np.ndarray)
+        assert isinstance(cent, np.ndarray)
+        assert isinstance(scale, float)
 
-    def test_output_shapes(self):
-        pts = _make_data((0, 0, 0), (3, 2, 1), n=200, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        assert result["centre"].shape == (3,)
-        assert result["radii"].shape == (3,)
-        assert result["axes"].shape == (3, 3)
-        assert result["M"].shape == (4, 4)
-        assert result["coefficients"].shape == (10,)
-        assert result["rbf_weights"].shape == (200,)
-
-    def test_radii_sorted_descending(self):
-        pts = _make_data((0, 0, 0), (5, 3, 1), n=300, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        r = result["radii"]
-        assert r[0] >= r[1] >= r[2]
-
-    def test_too_few_points(self):
-        pts = _make_data((0, 0, 0), (3, 2, 1), n=5, noise=0.0)
-        with pytest.raises(ValueError, match="At least 10"):
-            fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-
-    def test_mismatched_lengths(self):
-        with pytest.raises(ValueError):
-            fit_ellipsoid([1, 2, 3], [1, 2], [1, 2, 3])
-
-    def test_rms_residual_low_noise(self):
-        """RMS residual should be small for low-noise data."""
-        pts = _make_data((0, 0, 0), (3, 2, 1), n=300, noise=0.01)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        rms = residuals_rms(pts[:, 0], pts[:, 1], pts[:, 2], result)
-        assert rms < 0.5
-
-    def test_custom_k_parameter(self):
-        """Using k = 2 (still within valid range) should still converge."""
-        pts = _make_data((0, 0, 0), (3, 2, 1), n=300, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2], k=2.0)
-        assert "centre" in result
-
-    def test_custom_epsilon(self):
-        """Explicit epsilon parameter should be accepted and give valid fit."""
-        pts = _make_data((0, 0, 0), (3, 2, 1), n=300, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2], epsilon=0.1)
-        assert result["radii"].min() > 0
-
-    def test_custom_k_neighbours(self):
-        """Custom k_neighbours should produce a valid fit."""
-        pts = _make_data((0, 0, 0), (3, 2, 1), n=300, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2], k_neighbours=10)
-        assert "centre" in result
-
-    def test_rotated_ellipsoid(self):
-        """Fit should work for a rotated (non-axis-aligned) ellipsoid."""
-        from scipy.spatial.transform import Rotation
-        R = Rotation.from_euler('xyz', [30, 45, 60], degrees=True).as_matrix()
-        pts = generate_ellipsoid_points(
-            centre=(2, -1, 4),
-            radii=(6, 4, 2),
-            rotation=R,
-            n_points=500,
-            noise_std=0.05,
-            seed=123,
-        )
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        np.testing.assert_allclose(result["centre"], [2, -1, 4], atol=0.4)
-        np.testing.assert_allclose(
-            np.sort(result["radii"])[::-1],
-            np.sort([6, 4, 2])[::-1],
-            atol=0.5,
-        )
-
-    def test_rbf_weights_shape(self):
-        """rbf_weights should have the same length as input points."""
-        n = 200
+    def test_alpha_shape(self):
+        n = 150
         pts = _make_data((0, 0, 0), (3, 2, 1), n=n, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        assert result["rbf_weights"].shape == (n,)
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        assert alpha.shape == (n,)
 
+    def test_beta_shape(self):
+        pts = _make_data((0, 0, 0), (3, 2, 1), n=100, noise=0.02)
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        assert beta.shape == (10,)
 
-# ---------------------------------------------------------------------------
-# Algebraic distance tests
-# ---------------------------------------------------------------------------
+    def test_centroid_close_to_true(self):
+        true_centre = np.array([1.0, 2.0, 3.0])
+        pts = generate_ellipsoid_points(
+            centre=true_centre, radii=(3, 2, 1),
+            n_points=200, noise_std=0.0, seed=5
+        )
+        _, _, cent, scale = fit_rbf_ellipsoid_linear(pts)
+        np.testing.assert_allclose(cent, true_centre, atol=0.1)
+        assert scale > 0
 
-class TestAlgebraicDistance:
-    def test_distance_near_zero_on_surface(self):
-        """Algebraic distance should be near zero for points on the ellipsoid."""
+    def test_too_few_points_raises(self):
+        pts = _make_data((0, 0, 0), (3, 2, 1), n=5)
+        with pytest.raises(ValueError, match="At least 10"):
+            fit_rbf_ellipsoid_linear(pts)
+
+    def test_wrong_shape_raises(self):
+        with pytest.raises(ValueError):
+            fit_rbf_ellipsoid_linear(np.ones((50, 2)))
+
+    def test_with_smoothing(self):
+        pts = _make_data((0, 0, 0), (3, 2, 1), n=150, noise=0.02)
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.1)
+        assert result is not None
+
+    def test_noise_free(self):
+        """Noise-free data should yield a valid result."""
+        pts = generate_ellipsoid_points(
+            radii=(4, 3, 2), n_points=200, noise_std=0.0, seed=99
+        )
+        result = fit_rbf_ellipsoid_linear(pts, smooth=1e-6)
+        assert result is not None
+
+    def test_different_ellipsoids(self):
+        """Fit should work for various ellipsoid shapes."""
+        for radii in [(5, 3, 2), (2, 2, 1), (6, 1, 1)]:
+            pts = generate_ellipsoid_points(
+                radii=radii, n_points=200, noise_std=0.02, seed=0
+            )
+            result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+            assert result is not None, f"Fit failed for radii={radii}"
+
+    def test_residuals_small_on_surface(self):
+        """Residuals should be small for on-surface points."""
         pts = _make_data((0, 0, 0), (3, 2, 1), n=300, noise=0.01)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        d = algebraic_distance(pts[:, 0], pts[:, 1], pts[:, 2], result["coefficients"])
-        assert np.max(np.abs(d)) < 0.5
-
-    def test_output_shape(self):
-        pts = _make_data((0, 0, 0), (3, 2, 1), n=50, noise=0.02)
-        result = fit_ellipsoid(pts[:, 0], pts[:, 1], pts[:, 2])
-        d = algebraic_distance(pts[:, 0], pts[:, 1], pts[:, 2], result["coefficients"])
-        assert d.shape == (50,)
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        norm_pts = (pts - cent) / scale
+        vals = evaluate_model_linear(norm_pts, norm_pts, alpha, beta)
+        assert np.mean(np.abs(vals)) < 0.5
 
 
 # ---------------------------------------------------------------------------
@@ -225,8 +172,10 @@ class TestCSVDatasets:
         repo_root = os.path.join(os.path.dirname(__file__), "..")
         csv_path = os.path.join(repo_root, "data", fname)
         data = np.loadtxt(csv_path, delimiter=",", skiprows=1)
-        x, y, z = data[:, 0], data[:, 1], data[:, 2]
-        result = fit_ellipsoid(x, y, z)
-        rms = residuals_rms(x, y, z, result)
-        assert rms < 5.0
-        assert result["radii"].min() > 0
+        pts = data[:, :3]
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        norm_pts = (pts - cent) / scale
+        vals = evaluate_model_linear(norm_pts, norm_pts, alpha, beta)
+        assert np.mean(np.abs(vals)) < 1.0
