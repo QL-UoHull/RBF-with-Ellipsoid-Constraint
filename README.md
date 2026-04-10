@@ -8,7 +8,7 @@ Python implementation of the **implicit fitting using radial basis functions
 (RBFs) with ellipsoidal constraint** algorithm described in:
 
 > **Reference paper:**  
-> Li, Q. and Griffiths, J. G. (2004). *Radial basis functions for surface
+> Li, Q., et al. (2004). *Radial basis functions for surface
 > reconstruction from unorganised point clouds with applications to bone
 > reconstruction.*  
 > *Computer Graphics Forum*, 23(1), 67–78. Wiley-Blackwell.  
@@ -17,7 +17,7 @@ Python implementation of the **implicit fitting using radial basis functions
 
 ## Algorithm
 
-### RBF with Ellipsoid Constraint (Li &amp; Griffiths, CGF 2004)
+### RBF with Ellipsoid Constraint (Li &amp; et al., CGF 2004)
 
 Fits an implicit surface `F(x,y,z) = 0` using a **linear RBF kernel**
 `φ(r) = r` together with a second-order polynomial basis.  An ellipsoid
@@ -61,7 +61,7 @@ centres, and [β₀ … β₉] is the 10-term degree-2 polynomial basis.
 RBF-with-Ellipsoid-Constraint/
 ├── rbf_ellipsoid_constraint/
 │   ├── __init__.py
-│   ├── rbf_ellipsoid.py       # Core RBF fitting algorithm (Li & Griffiths, CGF 2004)
+│   ├── rbf_ellipsoid.py       # Core RBF fitting algorithm (Li, et al., CGF 2004)
 │   ├── loaders.py             # Multi-format point-cloud loader
 │   └── data_generator.py      # Synthetic data generator
 ├── data/
@@ -163,7 +163,7 @@ pts = load_point_cloud("data/synthetic_ellipsoid_low_noise.csv")  # CSV
 
 ## API Reference
 
-### RBF with Ellipsoid Constraint (Li &amp; Griffiths, CGF 2004)
+### RBF with Ellipsoid Constraint (Li &amp; et al., CGF 2004)
 
 #### `fit_rbf_ellipsoid_linear(points, smooth=0.0) → tuple | None`
 
@@ -208,7 +208,7 @@ If you use this code in academic work, please cite the original paper:
 @article{li2004rbf,
   title     = {Radial basis functions for surface reconstruction from
                unorganised point clouds with applications to bone reconstruction},
-  author    = {Li, Qingde and Griffiths, Jillian G.},
+  author    = {Qingde Li, et al.},
   journal   = {Computer Graphics Forum},
   volume    = {23},
   number    = {1},
