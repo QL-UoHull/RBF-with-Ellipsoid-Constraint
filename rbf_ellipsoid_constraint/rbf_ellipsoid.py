@@ -2,7 +2,7 @@
 
 Python implementation of the algorithm described in:
 
-    Li, Q. and Griffiths, J. G. (2004).
+    Li, Q., et al. (2004).
     "Radial basis functions for surface reconstruction from unorganised
     point clouds with applications to bone reconstruction."
     *Computer Graphics Forum*, 23(1), 67–78.
