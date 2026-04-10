@@ -12,7 +12,7 @@ import struct
 import numpy as np
 import pytest
 
-from rbf_implicit_fitting import (
+from rbf_ellipsoid_constraint import (
     load_point_cloud,
     load_csv,
     load_xyz,
@@ -22,6 +22,8 @@ from rbf_implicit_fitting import (
     load_npy,
     load_npz,
     generate_ellipsoid_points,
+    fit_rbf_ellipsoid_linear,
+    evaluate_model_linear,
 )
 
 # ---------------------------------------------------------------------------
@@ -372,3 +374,138 @@ class TestDispatcher:
         assert pts.shape == (300, 3)
 
 
+# ---------------------------------------------------------------------------
+# fit_rbf_ellipsoid_linear
+# ---------------------------------------------------------------------------
+
+class TestFitRBFEllipsoidLinear:
+    def test_returns_four_tuple(self):
+        pts = _pts(150)
+        result = fit_rbf_ellipsoid_linear(pts)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        assert isinstance(alpha, np.ndarray)
+        assert isinstance(beta, np.ndarray)
+        assert isinstance(cent, np.ndarray)
+        assert isinstance(scale, float)
+
+    def test_alpha_shape(self):
+        pts = _pts(120)
+        alpha, beta, cent, scale = fit_rbf_ellipsoid_linear(pts)
+        assert alpha.shape == (120,)
+
+    def test_beta_shape(self):
+        pts = _pts(100)
+        alpha, beta, cent, scale = fit_rbf_ellipsoid_linear(pts)
+        assert beta.shape == (10,)
+
+    def test_centroid_and_scale(self):
+        true_centre = np.array([1.0, 2.0, 3.0])
+        pts = generate_ellipsoid_points(
+            centre=true_centre, radii=(3, 2, 1),
+            n_points=200, noise_std=0.0, seed=5
+        )
+        _, _, cent, scale = fit_rbf_ellipsoid_linear(pts)
+        np.testing.assert_allclose(cent, true_centre, atol=0.1)
+        assert scale > 0
+
+    def test_too_few_points_raises(self):
+        pts = _pts(5)
+        with pytest.raises(ValueError, match="At least 10"):
+            fit_rbf_ellipsoid_linear(pts)
+
+    def test_wrong_shape_raises(self):
+        with pytest.raises(ValueError):
+            fit_rbf_ellipsoid_linear(np.ones((50, 2)))
+
+    def test_with_smoothing(self):
+        pts = _pts(150)
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.1)
+        assert result is not None
+
+    def test_noise_free(self):
+        """Noise-free data should yield a valid result."""
+        pts = generate_ellipsoid_points(
+            radii=(4, 3, 2), n_points=200, noise_std=0.0, seed=99
+        )
+        result = fit_rbf_ellipsoid_linear(pts, smooth=1e-6)
+        assert result is not None
+
+    def test_different_ellipsoids(self):
+        """Fit should work for various ellipsoid shapes."""
+        for radii in [(5, 3, 2), (2, 2, 1), (6, 1, 1)]:
+            pts = generate_ellipsoid_points(
+                radii=radii, n_points=200, noise_std=0.02, seed=0
+            )
+            result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+            assert result is not None, f"Fit failed for radii={radii}"
+
+
+# ---------------------------------------------------------------------------
+# evaluate_model_linear
+# ---------------------------------------------------------------------------
+
+class TestEvaluateModelLinear:
+    def test_output_shape(self):
+        pts = _pts(150)
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        norm_pts = (pts - cent) / scale
+        vals = evaluate_model_linear(norm_pts, norm_pts, alpha, beta)
+        assert vals.shape == (150,)
+
+    def test_residuals_small_on_surface(self):
+        """Residuals should be small for points lying on the ellipsoid."""
+        pts = generate_ellipsoid_points(
+            radii=(3, 2, 1), n_points=300, noise_std=0.01, seed=42
+        )
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        norm_pts = (pts - cent) / scale
+        vals = evaluate_model_linear(norm_pts, norm_pts, alpha, beta)
+        assert np.mean(np.abs(vals)) < 0.5
+
+    def test_chunking_consistent(self):
+        """Results should be identical regardless of chunk_size."""
+        pts = _pts(200)
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        norm_pts = (pts - cent) / scale
+        v1 = evaluate_model_linear(norm_pts, norm_pts, alpha, beta, chunk_size=50)
+        v2 = evaluate_model_linear(norm_pts, norm_pts, alpha, beta, chunk_size=200)
+        np.testing.assert_allclose(v1, v2, atol=1e-10)
+
+
+# ---------------------------------------------------------------------------
+# Integration: load file -> RBF fit
+# ---------------------------------------------------------------------------
+
+class TestIntegration:
+    @pytest.mark.parametrize("fname", [
+        "synthetic_ellipsoid.obj",
+        "synthetic_ellipsoid.ply",
+        "synthetic_ellipsoid_binary.ply",
+        "synthetic_ellipsoid.xyz",
+        "synthetic_ellipsoid.m",
+    ])
+    def test_load_and_fit_rbf(self, fname):
+        path = os.path.join(DATA_DIR, fname)
+        if not os.path.exists(path):
+            pytest.skip(f"Sample file not found: {fname}")
+        pts = load_point_cloud(path)
+        assert pts.shape[1] == 3
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+
+    def test_load_csv_and_fit_rbf(self):
+        path = os.path.join(DATA_DIR, "synthetic_ellipsoid_low_noise.csv")
+        pts = load_point_cloud(path)
+        result = fit_rbf_ellipsoid_linear(pts, smooth=0.05)
+        assert result is not None
+        alpha, beta, cent, scale = result
+        norm_pts = (pts - cent) / scale
+        vals = evaluate_model_linear(norm_pts, norm_pts, alpha, beta)
+        assert np.mean(np.abs(vals)) < 1.0
