@@ -8,9 +8,7 @@ Python implementation of the **implicit fitting using radial basis functions
 (RBFs) with ellipsoidal constraint** algorithm described in:
 
 > **Reference paper:**  
-> Li, Q., et al. (2004). *Radial basis functions for surface
-> reconstruction from unorganised point clouds with applications to bone
-> reconstruction.*  
+> Li, Q., et al. (2004). *Implicit fitting using radial basis functions with ellipsoid constraint.*  
 > *Computer Graphics Forum*, 23(1), 67–78. Wiley-Blackwell.  
 > https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2004.00005.x
 
@@ -206,8 +204,7 @@ If you use this code in academic work, please cite the original paper:
 
 ```bibtex
 @article{li2004rbf,
-  title     = {Radial basis functions for surface reconstruction from
-               unorganised point clouds with applications to bone reconstruction},
+  title     = {Implicit fitting using radial basis functions with ellipsoid constraint},
   author    = {Qingde Li, et al.},
   journal   = {Computer Graphics Forum},
   volume    = {23},
