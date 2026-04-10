@@ -1,6 +1,6 @@
 """
 Multi-format example: load a 3-D point cloud from various file formats and
-fit an ellipsoid using the RBF ellipsoid fitting algorithm in the package.
+fit an RBF implicit surface using the RBF ellipsoid fitting algorithm in the package.
 
 Supported input formats demonstrated here:
   .csv  .obj  .ply  .xyz  .txt  .pts  .m  .npy  .npz
@@ -134,7 +134,7 @@ def main():
         if not data_files:
             print("No data files found in data/.  Run the data generator first.")
             return
-        _print_sep("Multi-format ellipsoid fitting demo")
+        _print_sep("Multi-format RBF implicit surface fitting demo")
         print(f"  Found {len(data_files)} data file(s).")
         for path in data_files:
             run_on_file(path)

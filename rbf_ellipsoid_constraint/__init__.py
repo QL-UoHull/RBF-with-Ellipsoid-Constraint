@@ -15,7 +15,14 @@ ellipsoid constraint.  A synthetic data generator and multi-format data
 loader are also included.
 """
 
-from .data_generator import generate_ellipsoid_points
+from .data_generator import (
+    generate_ellipsoid_points,
+    generate_torus_points,
+    generate_superquadric_points,
+    generate_bumpy_sphere_points,
+    generate_saddle_points,
+    generate_synthetic_points,
+)
 from .loaders import (
     load_point_cloud,
     load_csv,
@@ -36,8 +43,13 @@ __all__ = [
     # RBF with Ellipsoid Constraint (Li & Griffiths, CGF 2004)
     "fit_rbf_ellipsoid_linear",
     "evaluate_model_linear",
-    # Synthetic data generator
+    # Synthetic data generators
     "generate_ellipsoid_points",
+    "generate_torus_points",
+    "generate_superquadric_points",
+    "generate_bumpy_sphere_points",
+    "generate_saddle_points",
+    "generate_synthetic_points",
     # Multi-format data loader
     "load_point_cloud",
     "load_csv",

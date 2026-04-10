@@ -1,6 +1,5 @@
 """
-CSV dataset example: load a CSV file and fit an ellipsoid using RBF implicit
-fitting with ellipsoidal constraint.
+CSV dataset example: load a CSV file and fit an RBF implicit surface to a 3-D point cloud.
 
 Reference:
     Li, Q. and Griffiths, J. G. (2004). "Radial basis functions for surface
