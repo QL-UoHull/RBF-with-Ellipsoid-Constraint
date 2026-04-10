@@ -1,6 +1,6 @@
 """
 Multi-format example: load a 3-D point cloud from various file formats and
-fit an ellipsoid using the algebraic ellipsoid fitting algorithm in the package.
+fit an ellipsoid using the RBF ellipsoid fitting algorithm in the package.
 
 Supported input formats demonstrated here:
   .csv  .obj  .ply  .xyz  .txt  .pts  .m  .npy  .npz
@@ -22,10 +22,10 @@ matplotlib.use("Agg")          # headless backend so the script runs without a d
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 
-from rbf_implicit_fitting import (
+from rbf_ellipsoid_constraint import (
     load_point_cloud,
-    fit_ellipsoid,
-    residuals_rms,
+    fit_rbf_ellipsoid_linear,
+    evaluate_model_linear,
     FORMAT_LOADERS,
 )
 
@@ -45,14 +45,18 @@ def _print_sep(title=""):
         print("─" * width)
 
 
-def demo_algebraic(pts: np.ndarray, label: str) -> None:
-    """Fit using the RBF implicit fitting with ellipsoidal constraint (Li, CGF 2004)."""
-    x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
-    result = fit_ellipsoid(x, y, z)
-    rms = residuals_rms(x, y, z, result)
-    print(f"  [Algebraic] Centre : {result['centre'].round(4)}")
-    print(f"  [Algebraic] Radii  : {result['radii'].round(4)}")
-    print(f"  [Algebraic] RMS    : {rms:.6f}")
+def demo_rbf(pts: np.ndarray, label: str) -> None:
+    """Fit using the RBF implicit fitting with ellipsoidal constraint (Li & Griffiths, CGF 2004)."""
+    result = fit_rbf_ellipsoid_linear(pts)
+    if result is None:
+        print(f"  [RBF] Fitting failed — no valid eigenvalue found.")
+        return None
+    alpha, beta, centroid, scale = result
+    norm_pts = (pts - centroid) / scale
+    vals = evaluate_model_linear(norm_pts, norm_pts, alpha, beta)
+    rms = float(np.sqrt(np.mean(vals ** 2)))
+    print(f"  [RBF] Centroid : {centroid.round(4)}")
+    print(f"  [RBF] RMS      : {rms:.6f}")
     return result
 
 
@@ -60,8 +64,8 @@ def demo_algebraic(pts: np.ndarray, label: str) -> None:
 # Visualisation
 # ---------------------------------------------------------------------------
 
-def visualise_and_save(pts, algebraic_result, label, out_path):
-    """Save a scatter + surface plot."""
+def visualise_and_save(pts, rbf_result, label, out_path):
+    """Save a scatter plot."""
     fig = plt.figure(figsize=(8, 6))
 
     ax1 = fig.add_subplot(111, projection="3d")
@@ -69,24 +73,7 @@ def visualise_and_save(pts, algebraic_result, label, out_path):
         pts[:, 0], pts[:, 1], pts[:, 2],
         s=4, alpha=0.6, c="steelblue", label="Points",
     )
-    if algebraic_result is not None:
-        cx, cy, cz = algebraic_result["centre"]
-        r1, r2, r3 = algebraic_result["radii"]
-        axes = algebraic_result["axes"]
-        u = np.linspace(0, 2 * np.pi, 50)
-        v = np.linspace(0, np.pi, 25)
-        xs = r1 * np.outer(np.cos(u), np.sin(v))
-        ys = r2 * np.outer(np.sin(u), np.sin(v))
-        zs = r3 * np.outer(np.ones_like(u), np.cos(v))
-        shape = xs.shape
-        pm = np.column_stack([xs.ravel(), ys.ravel(), zs.ravel()]) @ axes.T
-        ax1.plot_surface(
-            pm[:, 0].reshape(shape) + cx,
-            pm[:, 1].reshape(shape) + cy,
-            pm[:, 2].reshape(shape) + cz,
-            alpha=0.15, color="orange",
-        )
-    ax1.set_title(f"Algebraic fit (Li, CGF 2004)\n({label})")
+    ax1.set_title(f"RBF fit (Li & Griffiths, CGF 2004)\n({label})")
     ax1.set_xlabel("x"); ax1.set_ylabel("y"); ax1.set_zlabel("z")
     ax1.legend(fontsize=7)
 
@@ -117,9 +104,9 @@ def run_on_file(filepath: str) -> None:
 
     alg = None
     try:
-        alg = demo_algebraic(pts, label)
+        alg = demo_rbf(pts, label)
     except Exception as exc:
-        print(f"  [Algebraic] FAILED: {exc}")
+        print(f"  [RBF] FAILED: {exc}")
 
     out_png = os.path.join(
         os.path.dirname(__file__),
