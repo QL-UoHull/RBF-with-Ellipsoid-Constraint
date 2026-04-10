@@ -79,7 +79,7 @@ RBF-with-Ellipsoid-Constraint/
 │   ├── fit_from_csv.py        # Load CSV datasets and fit
 │   └── fit_multiformat.py     # Load any supported format and fit
 ├── notebooks/
-│   └── ellipsoid_fitting_demo.ipynb
+│   └── ellipsoid_fitting_demo.ipynb  # RBF implicit fitting demo notebook
 ├── tests/
 │   ├── __init__.py
 │   ├── test_data_generator.py      # Tests for data generator

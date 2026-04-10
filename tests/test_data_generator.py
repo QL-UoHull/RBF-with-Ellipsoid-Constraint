@@ -19,6 +19,11 @@ import pytest
 
 from rbf_ellipsoid_constraint import (
     generate_ellipsoid_points,
+    generate_torus_points,
+    generate_superquadric_points,
+    generate_bumpy_sphere_points,
+    generate_saddle_points,
+    generate_synthetic_points,
 )
 
 
@@ -73,3 +78,67 @@ class TestGenerateEllipsoidPoints:
     def test_invalid_rotation_shape(self):
         with pytest.raises(ValueError, match="rotation must be a"):
             generate_ellipsoid_points(rotation=np.eye(4))
+
+
+class TestGenerateTorus:
+    def test_shape(self):
+        pts = generate_torus_points(n_points=200, noise_std=0.0, seed=0)
+        assert pts.shape == (200, 3)
+
+    def test_on_torus(self):
+        R, r = 3.0, 1.0
+        pts = generate_torus_points(major_radius=R, minor_radius=r,
+                                    n_points=500, noise_std=0.0, seed=1)
+        x, y, z = pts[:,0], pts[:,1], pts[:,2]
+        dist_from_ring = np.sqrt((np.sqrt(x**2 + y**2) - R)**2 + z**2)
+        np.testing.assert_allclose(dist_from_ring, r, atol=0.01)
+
+
+class TestGenerateSuperquadric:
+    def test_shape(self):
+        pts = generate_superquadric_points(n_points=150, noise_std=0.0, seed=0)
+        assert pts.shape == (150, 3)
+
+    def test_centre_offset(self):
+        centre = (5.0, 6.0, 3.0)
+        pts = generate_superquadric_points(centre=centre, n_points=200,
+                                           noise_std=0.0, seed=0)
+        np.testing.assert_allclose(pts.mean(axis=0), centre, atol=0.5)
+
+
+class TestGenerateBumpySphere:
+    def test_shape(self):
+        pts = generate_bumpy_sphere_points(n_points=200, noise_std=0.0, seed=0)
+        assert pts.shape == (200, 3)
+
+    def test_roughly_spherical(self):
+        pts = generate_bumpy_sphere_points(base_radius=3.0, bump_amplitude=0.1,
+                                           n_points=300, noise_std=0.0, seed=0)
+        r = np.linalg.norm(pts, axis=1)
+        assert r.mean() == pytest.approx(3.0, abs=0.5)
+
+
+class TestGenerateSaddle:
+    def test_shape(self):
+        pts = generate_saddle_points(n_points=200, noise_std=0.0, seed=0)
+        assert pts.shape == (200, 3)
+
+    def test_saddle_equation(self):
+        sx, sy, k = 3.0, 3.0, 1.0
+        pts = generate_saddle_points(scale_x=sx, scale_y=sy, curvature=k,
+                                     n_points=300, noise_std=0.0, seed=0)
+        x, y, z = pts[:,0], pts[:,1], pts[:,2]
+        expected_z = k * (x**2 / sx**2 - y**2 / sy**2)
+        np.testing.assert_allclose(z, expected_z, atol=1e-10)
+
+
+class TestGenerateSyntheticPoints:
+    @pytest.mark.parametrize("shape", ["ellipsoid", "torus", "superquadric",
+                                        "bumpy_sphere", "saddle"])
+    def test_all_shapes(self, shape):
+        pts = generate_synthetic_points(shape=shape, n_points=100, seed=0)
+        assert pts.shape == (100, 3)
+
+    def test_invalid_shape(self):
+        with pytest.raises(ValueError, match="Unknown shape"):
+            generate_synthetic_points(shape="banana")

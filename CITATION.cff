@@ -17,7 +17,6 @@ date-released: '2026-04-09'
 keywords:
   - implicit surface fitting
   - radial basis functions
-  - ellipsoid fitting
   - RBF
   - surface reconstruction
   - 3D geometry
