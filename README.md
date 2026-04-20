@@ -12,6 +12,56 @@ Python implementation of the **implicit fitting using radial basis functions
 > *Computer Graphics Forum*, 23(1), 67–78. Wiley-Blackwell.  
 > https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8659.2004.00005.x
 
+---
+
+## Key Features
+
+### 1. Fitted Surface is Always Bounded (Closed)
+
+A fundamental problem with unconstrained implicit surface fitting is that the
+trivial solution `F ≡ 0` (and degenerate solutions such as planes or cylinders)
+can satisfy the interpolation conditions with zero or very low residual. These
+degenerate surfaces are **unbounded** — they extend to infinity — and are
+therefore useless for practical 3-D object reconstruction.
+
+The algorithm of Li et al. (2004) avoids this by imposing an **ellipsoid
+constraint** directly on the polynomial coefficients β. The constraint is
+encoded as a 10 × 10 positive-definite matrix **C** and the fitting problem is
+reformulated as a **generalised eigenvalue problem**:
+
+```
+D β = λ C β
+```
+
+The eigenvector β corresponding to the smallest positive eigenvalue is the
+solution that best fits the data *subject to* the guarantee that the zero
+level-set `F(x,y,z) = 0` is a **closed, bounded ellipsoidal surface**. No
+degenerate open surface can satisfy the constraint, regardless of the input
+point distribution.
+
+### 2. Automatic Hole-Filling for Incomplete Point Clouds
+
+Real-world 3-D scans (e.g. medical imaging, structured-light scanning) often
+produce **incomplete point clouds** with holes, missing patches, or broken
+regions caused by occlusion, limited sensor coverage, or surface reflectance
+issues. Classic surface reconstruction methods (e.g. Delaunay triangulation,
+Poisson reconstruction) require additional explicit hole-detection and
+gap-filling post-processing steps.
+
+Because this method fits a **globally defined implicit function** `F(x,y,z)`
+to *all* scattered points simultaneously, and because the ellipsoid constraint
+forces the zero level-set to be a complete closed shell, the reconstructed
+surface **automatically bridges across holes and missing patches** without any
+explicit hole-detection step. The RBF interpolant smoothly extrapolates through
+gaps, guided by the global ellipsoidal shape prior, producing a watertight
+surface even when large portions of the scan are absent.
+
+This makes the algorithm particularly well-suited to **medical surface
+reconstruction** tasks (bone, skull, organ surfaces) where scanner occlusion
+and low-contrast regions routinely leave holes in the acquired point cloud —
+as illustrated by the included datasets `femur.m`, `head.m`, and `Tibia.csv`.
+
+---
 
 ## Algorithm
 
@@ -46,9 +96,9 @@ centres, and [β₀ … β₉] is the 10-term degree-2 polynomial basis.
 3. **Build the polynomial basis matrix** **B** (N × 10).
 4. **Solve A X = B** to obtain X.
 5. **Form D = Bᵀ X** (10 × 10).
-6. **Build the ellipsoid constraint matrix C** (10 × 10).
+6. **Build the ellipsoid constraint matrix C** (10 × 10) — this guarantees a closed, bounded surface (Feature 1) and enables automatic hole-filling (Feature 2).
 7. **Solve the generalised eigenvalue problem D β = λ C β**; select the
-   eigenvector β with smallest positive eigenvalue.
+eigenvector β with smallest positive eigenvalue.
 8. **Recover RBF weights** α = −X β.
 
 ---
@@ -155,7 +205,7 @@ pts = load_point_cloud("data/synthetic_ellipsoid_low_noise.csv")  # CSV
 | `.ply` | Stanford PLY | ASCII and binary (little-endian / big-endian) |
 | `.m` | MATLAB script | Parses `data = [...];` matrix literal |
 | `.npy` | NumPy binary | Array must be 2-D with ≥ 3 columns |
-| `.npz` | NumPy compressed | Array stored under key `"data"` |
+| `.npz` | NumPy compressed | Array stored under key "data" |
 
 ---
 
@@ -186,7 +236,6 @@ Evaluate the fitted implicit surface F at query points (in normalised coordinate
 #### `generate_ellipsoid_points(centre, radii, rotation, n_points, noise_std, seed) → ndarray (N, 3)`
 
 Generate 3-D points sampled uniformly on an ellipsoid surface.
-
 
 ---
 
