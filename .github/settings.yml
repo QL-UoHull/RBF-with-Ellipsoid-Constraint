@@ -1,0 +1,3 @@
+A Python implementation of implicit surface fitting using radial basis functions (RBFs) with an ellipsoid constraint for bounded 3D point-cloud reconstruction and hole filling.
+https://github.com/QL-UoHull/RBF-with-Ellipsoid-Constraint
+topics: python, radial-basis-functions, point-cloud, surface-reconstruction, ellipsoid-fitting, computational-geometry, medical-imaging
