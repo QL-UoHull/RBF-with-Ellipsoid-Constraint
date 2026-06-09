@@ -1,3 +1,3 @@
-Python implementation of ellipsoid-constrained radial basis function surface fitting for implicit 3D reconstruction from scattered point clouds.
+Research code for ellipsoid-constrained radial basis function implicit surface reconstruction from scattered 3D point clouds.
 https://github.com/QL-UoHull/RBF-with-Ellipsoid-Constraint
 topics: python, radial-basis-functions, implicit-surface, surface-reconstruction, point-cloud, 3d-reconstruction, computational-geometry, medical-imaging
